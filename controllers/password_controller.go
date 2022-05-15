@@ -51,6 +51,15 @@ func (r *PasswordReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 
 	logger.Info("Reconcile is called.")
 
+	// Fetch Password object
+	var password secretv1alpha1.Password
+	if err := r.Get(ctx, req.NamespacedName, &password); err != nil {
+		logger.Error(err, "Fetch Password object - failed")
+		return ctrl.Result{}, client.IgnoreNotFound(err)
+	}
+
+	logger.Info("Fetch Password object - succeeded", "password", password.Name, "createdAt", password.CreationTimestamp)
+
 	return ctrl.Result{}, nil
 }
 
