@@ -49,10 +49,18 @@ type PasswordSpec struct {
 	DisallowRepeat bool `json:"disallowRepeat"`
 }
 
+type PasswordState string
+
+const (
+	PasswordInSync PasswordState = "InSync"
+	PasswordFailed PasswordState = "Failed"
+)
+
 // PasswordStatus defines the observed state of Password
 type PasswordStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+
+	// Information about if Password is in-sync.
+	State PasswordState `json:"state,omitempty"` // in-sync, failed
 }
 
 //+kubebuilder:object:root=true
