@@ -13,4 +13,4 @@ kind: Kustomization
 images:
 - name: controller
   newName: password-operator
-  newTag: v1
+  newTag: webhook
