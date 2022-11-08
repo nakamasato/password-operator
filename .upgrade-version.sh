@@ -3,6 +3,7 @@
 set -eux
 
 PASSWORD_CONTROLLER_GO_FILE=controllers/password_controller.go
+PASSWORD_GO_TYPE_FILE=api/v1alpha1/password_types.go
 export KUSTOMIZE_VERSION=v4.5.5
 
 # 0. Clean up
@@ -87,41 +88,28 @@ gsed -i "/pkg\/reconcile/ r tmpfile" $PASSWORD_CONTROLLER_GO_FILE
 make fmt
 git add . && git commit -m "[Controller] Add log in Reconcile function"
 
-
-## MemcachedSpec
-MEMCACHED_GO_TYPE_FILE=api/v1alpha1/memcached_types.go
-gsed -i '/type MemcachedSpec struct {/,/}/d' $MEMCACHED_GO_TYPE_FILE
+# 4. [API] Remove Foo field from custom resource Password
+## PasswordSpec
+gsed -i '/type PasswordSpec struct {/,/}/d' $PASSWORD_GO_TYPE_FILE
 cat << EOF > tmpfile
-type MemcachedSpec struct {
-        //+kubebuilder:validation:Minimum=0
-        // Size is the size of the memcached deployment
-        Size int32 \`json:"size"\`
+type PasswordSpec struct {
+    // INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+    // Important: Run "make" to regenerate code after modifying this file
+    // Foo is an example field of Password. Edit password_types.go to remove/update
 }
 EOF
-gsed -i "/MemcachedSpec defines/ r tmpfile" $MEMCACHED_GO_TYPE_FILE
+gsed -i "/PasswordSpec defines/ r tmpfile" $PASSWORD_GO_TYPE_FILE
 rm tmpfile
 
-## MemcachedStatus
-gsed -i '/type MemcachedStatus struct {/,/}/d' $MEMCACHED_GO_TYPE_FILE
-cat << EOF > tmpfile
-type MemcachedStatus struct {
-        // Nodes are the names of the memcached pods
-        Nodes []string \`json:"nodes"\`
-}
-EOF
-gsed -i "/MemcachedStatus defines/ r tmpfile" $MEMCACHED_GO_TYPE_FILE
-rm tmpfile
 ## fmt
-make fmt
-
-## Update CRD and deepcopy
-make generate manifests
-## Update config/samples/cache_v1alpha1_memcached.yaml
-gsed -i '/spec:/{n;s/.*/  size: 3/}' config/samples/cache_v1alpha1_memcached.yaml
+KUSTOMIZE_VERSION=4.5.5 make install
+# Check if Foo field is removed in CRD
+test "$(kubectl get crd passwords.secret.example.com -o jsonpath='{.spec.versions[].schema.openAPIV3Schema.properties.spec}' | jq '.properties == null')" = "true"
 
 git add .
 pre-commit run -a || true
-git commit -am "3. Define Memcached API (CRD)"
+git commit -am "[API] Remove Foo field from custom resource Password"
+
 
 # 4. Implement the controller
 
