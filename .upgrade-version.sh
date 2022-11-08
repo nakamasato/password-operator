@@ -384,3 +384,10 @@ test "$(kubectl get crd passwords.secret.example.com -o jsonpath='{.spec.version
 git add .
 pre-commit run -a || true
 git commit -am "[API] Add AdditionalPrinterColumns"
+
+# 12. [kubebuilder] Create validating admission webhook
+kubebuilder create webhook --group secret --version v1alpha1 --kind Password --programmatic-validation
+make manifests
+git add .
+pre-commit run -a || true
+git add . && git commit -am "[kubebuilder] Create validating admission webhook"
