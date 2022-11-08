@@ -111,9 +111,7 @@ pre-commit run -a || true
 git commit -am "[API] Remove Foo field from custom resource Password"
 
 
-# 4. Implement the controller
-
-## 4.1. Fetch Memcached instance.
+# 5. [Controller] Fetch Password object
 gsed -i '/Reconcile(ctx context.Context, req ctrl.Request) /,/^}/d' $PASSWORD_CONTROLLER_GO_FILE
 cat << EOF > tmpfile
 func (r *PasswordReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
@@ -141,92 +139,61 @@ pre-commit run -a || true
 git commit -am "[Controller] Fetch Password object"
 
 
-## 4.2 Check if the deployment already exists, and create one if not exists.
-gsed -i '/^import/a "k8s.io/apimachinery/pkg/types"' $PASSWORD_CONTROLLER_GO_FILE
-gsed -i '/^import/a appsv1 "k8s.io/api/apps/v1"' $PASSWORD_CONTROLLER_GO_FILE
+## 6. [Controller] Create Secret object if not exists
 gsed -i '/^import/a corev1 "k8s.io/api/core/v1"' $PASSWORD_CONTROLLER_GO_FILE
+gsed -i '/^import/a "k8s.io/apimachinery/pkg/api/errors"' $PASSWORD_CONTROLLER_GO_FILE
 gsed -i '/^import/a metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"' $PASSWORD_CONTROLLER_GO_FILE
 
 cat << EOF > tmpfile
 
-// 2. Check if the deployment already exists, if not create a new one
-found := &appsv1.Deployment{}
-err = r.Get(ctx, types.NamespacedName{Name: memcached.Name, Namespace: memcached.Namespace}, found)
-if err != nil && errors.IsNotFound(err) {
-        // Define a new deployment
-        dep := r.deploymentForMemcached(memcached)
-        log.Info("2. Check if the deployment already exists, if not create a new one. Creating a new Deployment", "Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
-        err = r.Create(ctx, dep)
-        if err != nil {
-                log.Error(err, "2. Check if the deployment already exists, if not create a new one. Failed to create new Deployment", "Deployment.Namespace", dep.Namespace, "Deployment.Name", dep.Name)
+    // Create Secret object if not exists
+    var secret corev1.Secret
+    if err := r.Get(ctx, req.NamespacedName, &secret); err != nil {
+        if errors.IsNotFound(err) {
+            // Create Secret
+            logger.Info("Create Secret object if not exists - create secret")
+            secret := newSecretFromPassword(&password)
+            err = r.Create(ctx, secret)
+            if err != nil {
+                logger.Error(err, "Create Secret object if not exists - failed to create Secret")
                 return ctrl.Result{}, err
+            }
+            logger.Info("Create Secret object if not exists - Secret successfully created")
+        } else {
+            logger.Error(err, "Create Secret object if not exists - failed to fetch Secret")
+            return ctrl.Result{}, err
         }
-        // Deployment created successfully - return and requeue
-        return ctrl.Result{Requeue: true}, nil
-} else if err != nil {
-        log.Error(err, "2. Check if the deployment already exists, if not create a new one. Failed to get Deployment")
-        return ctrl.Result{}, err
-}
+    }
+
+    logger.Info("Create Secret object if not exists - completed")
 EOF
 # Add the contents before the last return in Reconcile function.
 gsed -i $'/^\treturn ctrl.Result{}, nil/{e cat tmpfile\n}' $PASSWORD_CONTROLLER_GO_FILE
 
 cat << EOF > tmpfile
 
-// deploymentForMemcached returns a memcached Deployment object
-func (r *MemcachedReconciler) deploymentForMemcached(m *cachev1alpha1.Memcached) *appsv1.Deployment {
-    ls := labelsForMemcached(m.Name)
-    replicas := m.Spec.Size
-
-    dep := &appsv1.Deployment{
-            ObjectMeta: metav1.ObjectMeta{
-                    Name:      m.Name,
-                    Namespace: m.Namespace,
-            },
-            Spec: appsv1.DeploymentSpec{
-                    Replicas: &replicas,
-                    Selector: &metav1.LabelSelector{
-                            MatchLabels: ls,
-                    },
-                    Template: corev1.PodTemplateSpec{
-                            ObjectMeta: metav1.ObjectMeta{
-                                    Labels: ls,
-                            },
-                            Spec: corev1.PodSpec{
-                                    Containers: []corev1.Container{{
-                                            Image:   "memcached:1.4.36-alpine",
-                                            Name:    "memcached",
-                                            Command: []string{"memcached", "-m=64", "-o", "modern", "-v"},
-                                            Ports: []corev1.ContainerPort{{
-                                                    ContainerPort: 11211,
-                                                    Name:          "memcached",
-                                            }},
-                                    }},
-                            },
-                    },
-            },
+func newSecretFromPassword(password *secretv1alpha1.Password) *corev1.Secret {
+    secret := &corev1.Secret{
+        ObjectMeta: metav1.ObjectMeta{
+            Name:      password.Name,
+            Namespace: password.Namespace,
+        },
+        Data: map[string][]byte{
+            "password": []byte("123456789"), // password=123456789
+        },
     }
-    // Set Memcached instance as the owner and controller
-    ctrl.SetControllerReference(m, dep, r.Scheme)
-    return dep
-}
-
-// labelsForMemcached returns the labels for selecting the resources
-// belonging to the given memcached CR name.
-func labelsForMemcached(name string) map[string]string {
-    return map[string]string{"app": "memcached", "memcached_cr": name}
+    return secret
 }
 EOF
 cat tmpfile >> $PASSWORD_CONTROLLER_GO_FILE
 rm tmpfile
 
-gsed -i '/kubebuilder:rbac:groups=cache.example.com,resources=memcacheds\/finalizers/a \/\/+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete' $PASSWORD_CONTROLLER_GO_FILE
-gsed -i '/For(&cachev1alpha1.Memcached{})/a Owns(&appsv1.Deployment{}).' $PASSWORD_CONTROLLER_GO_FILE
+gsed -i '/kubebuilder:rbac:groups=secret.example.com,resources=passwords\/finalizers/a \/\/+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch;create;' $PASSWORD_CONTROLLER_GO_FILE # add marker for secret
 make fmt manifests
 
 git add .
 pre-commit run -a || true
-git commit -am "4.2. Implement Controller - Check if the deployment already exists, and create one if not exists"
+git add . && git commit -m "[Controller] Create Secret object if not exists"
 
 ## 4.3 Ensure the deployment size is the same as the spec.
 
