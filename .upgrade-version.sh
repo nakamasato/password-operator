@@ -114,27 +114,21 @@ git commit -am "[API] Remove Foo field from custom resource Password"
 # 4. Implement the controller
 
 ## 4.1. Fetch Memcached instance.
-PASSWORD_CONTROLLER_GO_FILE=controllers/memcached_controller.go
-
-gsed -i '/^import/a "k8s.io/apimachinery/pkg/api/errors"' $PASSWORD_CONTROLLER_GO_FILE
 gsed -i '/Reconcile(ctx context.Context, req ctrl.Request) /,/^}/d' $PASSWORD_CONTROLLER_GO_FILE
 cat << EOF > tmpfile
-func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-	log := log.FromContext(ctx)
+func (r *PasswordReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+    logger := log.FromContext(ctx)
 
-	// 1. Fetch the Memcached instance
-	memcached := &cachev1alpha1.Memcached{}
-	err := r.Get(ctx, req.NamespacedName, memcached)
-	if err != nil {
-		if errors.IsNotFound(err) {
-			log.Info("1. Fetch the Memcached instance. Memcached resource not found. Ignoring since object must be deleted")
-			return ctrl.Result{}, nil
-		}
-		// Error reading the object - requeue the request.
-		log.Error(err, "1. Fetch the Memcached instance. Failed to get Mmecached")
-		return ctrl.Result{}, err
+    logger.Info("Reconcile is called.")
+
+	// Fetch Password object
+	var password secretv1alpha1.Password
+	if err := r.Get(ctx, req.NamespacedName, &password); err != nil {
+    	logger.Error(err, "Fetch Password object - failed")
+    	return ctrl.Result{}, client.IgnoreNotFound(err)
 	}
-	log.Info("1. Fetch the Memcached instance. Memchached resource found", "memcached.Name", memcached.Name, "memcached.Namespace", memcached.Namespace)
+
+	logger.Info("Fetch Password object - succeeded", "password", password.Name, "createdAt", password.CreationTimestamp)
 	return ctrl.Result{}, nil
 }
 EOF
@@ -144,7 +138,8 @@ make fmt
 
 git add .
 pre-commit run -a || true
-git commit -am "4.1. Implement Controller - Fetch the Memcached instance"
+git commit -am "[Controller] Fetch Password object"
+
 
 ## 4.2 Check if the deployment already exists, and create one if not exists.
 gsed -i '/^import/a "k8s.io/apimachinery/pkg/types"' $PASSWORD_CONTROLLER_GO_FILE
