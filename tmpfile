@@ -1,7 +1,0 @@
-	passwordStr, err := passwordGenerator.Generate(
-		password.Spec.Length,
-		password.Spec.Digit,
-		password.Spec.Symbol,
-		password.Spec.CaseSensitive,
-		password.Spec.DisallowRepeat,
-	)

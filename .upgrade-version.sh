@@ -189,6 +189,7 @@ EOF
 cat tmpfile >> $PASSWORD_CONTROLLER_GO_FILE
 rm tmpfile
 
+# add rbac after the last rbac line
 gsed -i '/kubebuilder:rbac:groups=secret.example.com,resources=passwords\/finalizers/a \/\/+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch;create;' $PASSWORD_CONTROLLER_GO_FILE # add marker for secret
 make fmt manifests
 
@@ -285,7 +286,7 @@ type PasswordSpec struct {
 }
 EOF
 # replace PasswordSpec with tmpfile
-gsed -i "/type PasswordSpec struct {/,/^}/c $(sed 's/$/\\n/' tmpfile | tr -d '\n')" $PASSWORD_GO_TYPE_FILE
+gsed -i "/type PasswordSpec struct {/,/^}/c $(sed 's/$/\\n/' tmpfile | tr -d '\n' | sed 's/.\{2\}$//')" $PASSWORD_GO_TYPE_FILE
 
 # check the length of the properties
 make install
@@ -315,15 +316,62 @@ pre-commit run -a || true
 git commit -am "[API&Controller] Make password configurable with CRD fields"
 
 
-# 6.1. Deploy with Deployment
-make kustomize
-cd config/manager && ../../bin/kustomize edit set image controller=nakamasato/memcached-operator && cd -
+# 10. [API&Controller] Add Password Status
+cat << EOF > tmpfile
+type PasswordState string
+
+const (
+	PasswordInSync  PasswordState = "InSync"
+	PasswordFailed  PasswordState = "Failed"
+)
+
+EOF
+
+gsed -i $'/EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!/{e cat tmpfile\n}' $PASSWORD_GO_TYPE_FILE
+
+cat << EOF > tmpfile
+type PasswordStatus struct {
+
+    // Information about if Password is in-sync.
+    State PasswordState \`json:"state,omitempty"\` // in-sync, failed
+}
+EOF
+# replace PasswordStatus with tmpfile
+gsed -i "/type PasswordStatus struct {/,/^}/c $(sed 's/$/\\n/' tmpfile | tr -d '\n' | sed 's/.\{2\}$//')" $PASSWORD_GO_TYPE_FILE
+make manifests
+
+cat << EOF > tmpfile
+
+    password.Status.State = secretv1alpha1.PasswordInSync
+    if err := r.Status().Update(ctx, &password); err != nil {
+        logger.Error(err, "Failed to update Password status")
+        return ctrl.Result{}, err
+    }
+EOF
+# Add the contents before the last return in Reconcile function.
+gsed -i $'/^\treturn ctrl.Result{}, nil/{e cat tmpfile\n}' $PASSWORD_CONTROLLER_GO_FILE
+
+
+cat << EOF > tmpfile
+password.Status.State = secretv1alpha1.PasswordFailed
+if err := r.Status().Update(ctx, &password); err != nil {
+    logger.Error(err, "Failed to update Password status")
+    return ctrl.Result{}, err
+}
+EOF
+# Add the contents before returning the error
+gsed -i $'/return ctrl.Result{}, err/{e cat tmpfile\n}' $PASSWORD_CONTROLLER_GO_FILE
+rm tmpfile
+make fmt install
 
 git add .
 pre-commit run -a || true
-git commit -am "6.1. Deploy with Deployment"
+git commit -am "[API&Controller] Add Password Status"
 
-# 6.2. Deploy with OLM
+
+# 11. [API] Add AdditionalPrinterColumns
+
+# +//+kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
 mkdir -p config/manifests/bases
 cat << EOF > config/manifests/bases/memcached-operator.clusterserviceversion.yaml
 apiVersion: operators.coreos.com/v1alpha1
