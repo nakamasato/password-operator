@@ -54,19 +54,12 @@ echo "======== INIT PROJECT ==========="
 # need to make the dir clean before initializing a project
 kubebuilder init --domain example.com --repo example.com/password-operator
 echo "======== INIT PROJECT kubebuilder init completed =========="
-echo "git checkout docs mkdocs.yml"
-git checkout docs mkdocs.yml renovate.json
 
-echo "update readme and index.md"
 # 0. Update README
-for f in README.md docs/index.md; do
-	gsed -i "s#\[kubebuilder\](https://github.com/operator-framework/kubebuilder):.*#[kubebuilder](https://github.com/operator-framework/kubebuilder): [${KUBEBUILDER_VERSION}](https://github.com/operator-framework/kubebuilder/releases/${KUBEBUILDER_VERSION})#g" $f
-	gsed -i "s#\[go\](https://github.com/golang/go):.*#[go](https://github.com/golang/go): [${GO_VERSION}](https://github.com/golang/go/releases/${GO_VERSION})#g" $f
-done
 echo "git add & commit"
 git add .
 pre-commit run -a || true
-git commit -am "1. Create a project"
+git commit -am "[kubebuilder] Init project"
 
 echo "======== INIT PROJECT COMPLETED ==========="
 
