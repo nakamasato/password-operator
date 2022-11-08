@@ -64,10 +64,12 @@ git commit -am "[kubebuilder] Init project"
 echo "======== INIT PROJECT COMPLETED ==========="
 
 # 2. Create API (resource and controller) for Memcached
-kubebuilder create api --group cache --version v1alpha1 --kind Memcached --resource --controller
+kubebuilder create api --group secret --version v1alpha1 --kind Password --resource --controller
+make manifests
+
 git add .
 pre-commit run -a || true
-git commit -am "2. Create API (resource and controller) for Memcached"
+git commit -am "[kubebuilder] Create API Password (Controller & Resource)"
 
 # 3. Define API
 ## MemcachedSpec
