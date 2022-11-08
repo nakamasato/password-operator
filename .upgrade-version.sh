@@ -215,56 +215,45 @@ pre-commit run -a || true
 git commit -am "[Controller] Clean up Secret when Password is deleted"
 
 
-## 4.4 Update the Memcached status with the pod names.
-gsed -i '/^import/a "reflect"' $PASSWORD_CONTROLLER_GO_FILE
-cat << EOF > tmpfile
+## 8. [Controller] Generate random password
+gsed -i '/^import/a passwordGenerator "github.com/sethvargo/go-password/password"' $PASSWORD_CONTROLLER_GO_FILE
 
-// 4. Update the Memcached status with the pod names
-// List the pods for this memcached's deployment
-podList := &corev1.PodList{}
-listOpts := []client.ListOption{
-        client.InNamespace(memcached.Namespace),
-        client.MatchingLabels(labelsForMemcached(memcached.Name)),
-}
-if err = r.List(ctx, podList, listOpts...); err != nil {
-        log.Error(err, "4. Update the Memcached status with the pod names. Failed to list pods", "Memcached.Namespace", memcached.Namespace, "Memcached.Name", memcached.Name)
+# Update the way to generate password
+cat << EOF > tmpfile
+    passwordStr, err := passwordGenerator.Generate(64, 10, 10, false, false)
+    if err != nil {
+        logger.Error(err, "Create Secret object if not exists - failed to generate password")
         return ctrl.Result{}, err
-}
-podNames := getPodNames(podList.Items)
-log.Info("4. Update the Memcached status with the pod names. Pod list", "podNames", podNames)
-// Update status.Nodes if needed
-if !reflect.DeepEqual(podNames, memcached.Status.Nodes) {
-        memcached.Status.Nodes = podNames
-        err := r.Status().Update(ctx, memcached)
-        if err != nil {
-                log.Error(err, "4. Update the Memcached status with the pod names. Failed to update Memcached status")
-                return ctrl.Result{}, err
-        }
-}
-log.Info("4. Update the Memcached status with the pod names. Update memcached.Status", "memcached.Status.Nodes", memcached.Status.Nodes)
+    }
+    secret := newSecretFromPassword(&password, passwordStr)
 EOF
-# Add the contents before the last return in Reconcile function.
-gsed -i $'/^\treturn ctrl.Result{}, nil/{e cat tmpfile\n}' $PASSWORD_CONTROLLER_GO_FILE
+gsed -i 's/secret := newSecretFromPassword(&password)/cat tmpfile/e' $PASSWORD_CONTROLLER_GO_FILE
+gsed -i 's/err := ctrl.SetControllerReference(\&password, secret, r.Scheme)/err = ctrl.SetControllerReference(\&password, secret, r.Scheme)/g' $PASSWORD_CONTROLLER_GO_FILE
 
 cat << EOF > tmpfile
-
-// getPodNames returns the pod names of the array of pods passed in
-func getPodNames(pods []corev1.Pod) []string {
-    var podNames []string
-    for _, pod := range pods {
-            podNames = append(podNames, pod.Name)
-    }
-    return podNames
+func newSecretFromPassword(password *secretv1alpha1.Password, passwordStr string) *corev1.Secret {
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      password.Name,
+			Namespace: password.Namespace,
+		},
+		Data: map[string][]byte{
+			"password": []byte(passwordStr),
+		},
+	}
+	return secret
 }
 EOF
+gsed -i '/func newSecretFromPassword(password \*secretv1alpha1.Password) \*corev1.Secret {/,/^}/d' $PASSWORD_CONTROLLER_GO_FILE
 cat tmpfile >> $PASSWORD_CONTROLLER_GO_FILE
-gsed -i '/kubebuilder:rbac:groups=apps,resources=deployments,verbs=get/a \/\/+kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;' $PASSWORD_CONTROLLER_GO_FILE
-rm tmpfile
-make fmt manifests
+
+make fmt
+go mod tidy
 
 git add .
 pre-commit run -a || true
-git commit -am "4.4. Implement Controller - Update the Memcached status with the pod names"
+git commit -am "[Controller] Generate random password"
+
 
 # 5. Write a test
 CONTROLLER_SUITE_TEST_GO_FILE=controllers/suite_test.go

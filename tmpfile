@@ -1,0 +1,12 @@
+func newSecretFromPassword(password *secretv1alpha1.Password, passwordStr string) *corev1.Secret {
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      password.Name,
+			Namespace: password.Namespace,
+		},
+		Data: map[string][]byte{
+			"password": []byte(passwordStr),
+		},
+	}
+	return secret
+}
