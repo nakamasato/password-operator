@@ -195,33 +195,25 @@ git add .
 pre-commit run -a || true
 git add . && git commit -m "[Controller] Create Secret object if not exists"
 
-## 4.3 Ensure the deployment size is the same as the spec.
+## 7. [Controller] Clean up Secret when Password is deleted
 
 cat << EOF > tmpfile
 
-// 3. Ensure the deployment size is the same as the spec
-size := memcached.Spec.Size
-if *found.Spec.Replicas != size {
-        found.Spec.Replicas = &size
-        err = r.Update(ctx, found)
-        if err != nil {
-                log.Error(err, "3. Ensure the deployment size is the same as the spec. Failed to update Deployment", "Deployment.Namespace", found.Namespace, "Deployment.Name", found.Name)
-                return ctrl.Result{}, err
-        }
-        // Spec updated - return and requeue
-        log.Info("3. Ensure the deployment size is the same as the spec. Update deployment size", "Deployment.Spec.Replicas", size)
-        return ctrl.Result{Requeue: true}, nil
-}
+    err := ctrl.SetControllerReference(&password, secret, r.Scheme) // Set owner of this Secret
+    if err != nil {
+        logger.Error(err, "Create Secret object if not exists - failed to set SetControllerReference")
+        return ctrl.Result{}, err
+    }
 EOF
-# Add the contents before the last return in Reconcile function.
-gsed -i $'/^\treturn ctrl.Result{}, nil/{e cat tmpfile\n}' $PASSWORD_CONTROLLER_GO_FILE
+# Add the contents after secret := newSecretFromPassword(&password)
+gsed -i '/secret := newSecretFromPassword(&password)$/r tmpfile' $PASSWORD_CONTROLLER_GO_FILE
 rm tmpfile
 make fmt
-gsed -i '/spec:/{n;s/.*/  size: 2/}' config/samples/cache_v1alpha1_memcached.yaml
 
 git add .
 pre-commit run -a || true
-git commit -am "4.3. Implement Controller - Ensure the deployment size is the same as the spec"
+git commit -am "[Controller] Clean up Secret when Password is deleted"
+
 
 ## 4.4 Update the Memcached status with the pod names.
 gsed -i '/^import/a "reflect"' $PASSWORD_CONTROLLER_GO_FILE
