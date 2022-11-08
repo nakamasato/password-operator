@@ -2,6 +2,7 @@
 
 set -eux
 
+PASSWORD_CONTROLLER_GO_FILE=controllers/password_controller.go
 export KUSTOMIZE_VERSION=v4.5.5
 
 # 0. Clean up
@@ -49,13 +50,12 @@ fi
 
 echo "======== CLEAN UP COMPLETED ==========="
 
-# 1. Init a project
+# 1. [kubebuilder] Init project
 echo "======== INIT PROJECT ==========="
 # need to make the dir clean before initializing a project
 kubebuilder init --domain example.com --repo example.com/password-operator
 echo "======== INIT PROJECT kubebuilder init completed =========="
 
-# 0. Update README
 echo "git add & commit"
 git add .
 pre-commit run -a || true
@@ -63,7 +63,7 @@ git commit -am "[kubebuilder] Init project"
 
 echo "======== INIT PROJECT COMPLETED ==========="
 
-# 2. Create API (resource and controller) for Memcached
+# 2. [kubebuilder] Create API Password (Controller & Resource)
 kubebuilder create api --group secret --version v1alpha1 --kind Password --resource --controller
 make manifests
 
@@ -71,7 +71,23 @@ git add .
 pre-commit run -a || true
 git commit -am "[kubebuilder] Create API Password (Controller & Resource)"
 
-# 3. Define API
+# 3. [Controller] Add log in Reconcile function
+gsed -i '/Reconcile(ctx context.Context, req ctrl.Request) /,/^}/d' $PASSWORD_CONTROLLER_GO_FILE
+cat << EOF > tmpfile
+func (r *PasswordReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
+    logger := log.FromContext(ctx)
+
+    logger.Info("Reconcile is called.")
+
+    return ctrl.Result{}, nil
+}
+EOF
+gsed -i "/pkg\/reconcile/ r tmpfile" $PASSWORD_CONTROLLER_GO_FILE
+
+make fmt
+git add . && git commit -m "[Controller] Add log in Reconcile function"
+
+
 ## MemcachedSpec
 MEMCACHED_GO_TYPE_FILE=api/v1alpha1/memcached_types.go
 gsed -i '/type MemcachedSpec struct {/,/}/d' $MEMCACHED_GO_TYPE_FILE
@@ -110,10 +126,10 @@ git commit -am "3. Define Memcached API (CRD)"
 # 4. Implement the controller
 
 ## 4.1. Fetch Memcached instance.
-MEMCACHED_CONTROLLER_GO_FILE=controllers/memcached_controller.go
+PASSWORD_CONTROLLER_GO_FILE=controllers/memcached_controller.go
 
-gsed -i '/^import/a "k8s.io/apimachinery/pkg/api/errors"' $MEMCACHED_CONTROLLER_GO_FILE
-gsed -i '/Reconcile(ctx context.Context, req ctrl.Request) /,/^}/d' $MEMCACHED_CONTROLLER_GO_FILE
+gsed -i '/^import/a "k8s.io/apimachinery/pkg/api/errors"' $PASSWORD_CONTROLLER_GO_FILE
+gsed -i '/Reconcile(ctx context.Context, req ctrl.Request) /,/^}/d' $PASSWORD_CONTROLLER_GO_FILE
 cat << EOF > tmpfile
 func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	log := log.FromContext(ctx)
@@ -134,7 +150,7 @@ func (r *MemcachedReconciler) Reconcile(ctx context.Context, req ctrl.Request) (
 	return ctrl.Result{}, nil
 }
 EOF
-gsed -i "/pkg\/reconcile/ r tmpfile" $MEMCACHED_CONTROLLER_GO_FILE
+gsed -i "/pkg\/reconcile/ r tmpfile" $PASSWORD_CONTROLLER_GO_FILE
 rm tmpfile
 make fmt
 
@@ -143,10 +159,10 @@ pre-commit run -a || true
 git commit -am "4.1. Implement Controller - Fetch the Memcached instance"
 
 ## 4.2 Check if the deployment already exists, and create one if not exists.
-gsed -i '/^import/a "k8s.io/apimachinery/pkg/types"' $MEMCACHED_CONTROLLER_GO_FILE
-gsed -i '/^import/a appsv1 "k8s.io/api/apps/v1"' $MEMCACHED_CONTROLLER_GO_FILE
-gsed -i '/^import/a corev1 "k8s.io/api/core/v1"' $MEMCACHED_CONTROLLER_GO_FILE
-gsed -i '/^import/a metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"' $MEMCACHED_CONTROLLER_GO_FILE
+gsed -i '/^import/a "k8s.io/apimachinery/pkg/types"' $PASSWORD_CONTROLLER_GO_FILE
+gsed -i '/^import/a appsv1 "k8s.io/api/apps/v1"' $PASSWORD_CONTROLLER_GO_FILE
+gsed -i '/^import/a corev1 "k8s.io/api/core/v1"' $PASSWORD_CONTROLLER_GO_FILE
+gsed -i '/^import/a metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"' $PASSWORD_CONTROLLER_GO_FILE
 
 cat << EOF > tmpfile
 
@@ -170,7 +186,7 @@ if err != nil && errors.IsNotFound(err) {
 }
 EOF
 # Add the contents before the last return in Reconcile function.
-gsed -i $'/^\treturn ctrl.Result{}, nil/{e cat tmpfile\n}' $MEMCACHED_CONTROLLER_GO_FILE
+gsed -i $'/^\treturn ctrl.Result{}, nil/{e cat tmpfile\n}' $PASSWORD_CONTROLLER_GO_FILE
 
 cat << EOF > tmpfile
 
@@ -218,11 +234,11 @@ func labelsForMemcached(name string) map[string]string {
     return map[string]string{"app": "memcached", "memcached_cr": name}
 }
 EOF
-cat tmpfile >> $MEMCACHED_CONTROLLER_GO_FILE
+cat tmpfile >> $PASSWORD_CONTROLLER_GO_FILE
 rm tmpfile
 
-gsed -i '/kubebuilder:rbac:groups=cache.example.com,resources=memcacheds\/finalizers/a \/\/+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete' $MEMCACHED_CONTROLLER_GO_FILE
-gsed -i '/For(&cachev1alpha1.Memcached{})/a Owns(&appsv1.Deployment{}).' $MEMCACHED_CONTROLLER_GO_FILE
+gsed -i '/kubebuilder:rbac:groups=cache.example.com,resources=memcacheds\/finalizers/a \/\/+kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete' $PASSWORD_CONTROLLER_GO_FILE
+gsed -i '/For(&cachev1alpha1.Memcached{})/a Owns(&appsv1.Deployment{}).' $PASSWORD_CONTROLLER_GO_FILE
 make fmt manifests
 
 git add .
@@ -248,7 +264,7 @@ if *found.Spec.Replicas != size {
 }
 EOF
 # Add the contents before the last return in Reconcile function.
-gsed -i $'/^\treturn ctrl.Result{}, nil/{e cat tmpfile\n}' $MEMCACHED_CONTROLLER_GO_FILE
+gsed -i $'/^\treturn ctrl.Result{}, nil/{e cat tmpfile\n}' $PASSWORD_CONTROLLER_GO_FILE
 rm tmpfile
 make fmt
 gsed -i '/spec:/{n;s/.*/  size: 2/}' config/samples/cache_v1alpha1_memcached.yaml
@@ -258,7 +274,7 @@ pre-commit run -a || true
 git commit -am "4.3. Implement Controller - Ensure the deployment size is the same as the spec"
 
 ## 4.4 Update the Memcached status with the pod names.
-gsed -i '/^import/a "reflect"' $MEMCACHED_CONTROLLER_GO_FILE
+gsed -i '/^import/a "reflect"' $PASSWORD_CONTROLLER_GO_FILE
 cat << EOF > tmpfile
 
 // 4. Update the Memcached status with the pod names
@@ -286,7 +302,7 @@ if !reflect.DeepEqual(podNames, memcached.Status.Nodes) {
 log.Info("4. Update the Memcached status with the pod names. Update memcached.Status", "memcached.Status.Nodes", memcached.Status.Nodes)
 EOF
 # Add the contents before the last return in Reconcile function.
-gsed -i $'/^\treturn ctrl.Result{}, nil/{e cat tmpfile\n}' $MEMCACHED_CONTROLLER_GO_FILE
+gsed -i $'/^\treturn ctrl.Result{}, nil/{e cat tmpfile\n}' $PASSWORD_CONTROLLER_GO_FILE
 
 cat << EOF > tmpfile
 
@@ -299,8 +315,8 @@ func getPodNames(pods []corev1.Pod) []string {
     return podNames
 }
 EOF
-cat tmpfile >> $MEMCACHED_CONTROLLER_GO_FILE
-gsed -i '/kubebuilder:rbac:groups=apps,resources=deployments,verbs=get/a \/\/+kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;' $MEMCACHED_CONTROLLER_GO_FILE
+cat tmpfile >> $PASSWORD_CONTROLLER_GO_FILE
+gsed -i '/kubebuilder:rbac:groups=apps,resources=deployments,verbs=get/a \/\/+kubebuilder:rbac:groups=core,resources=pods,verbs=get;list;' $PASSWORD_CONTROLLER_GO_FILE
 rm tmpfile
 make fmt manifests
 
