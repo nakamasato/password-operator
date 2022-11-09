@@ -460,10 +460,14 @@ make docker-build IMG=$IMG
 kind load docker-image $IMG
 make deploy IMG=$IMG
 # need to wait
+while [ $(kubectl get po -n password-operator-system -o json | jq '.items | length') != "1" ]; do
+	sleep 5
+	echo "waiting for Pod creation"
+done
 loop=0
 while [ $(kubectl get po -n password-operator-system -o 'jsonpath={.items[].status.containerStatuses[].ready}') != true ]; do
 	sleep 5
-	echo 'waiting'
+	echo 'waiting for Pod readiness'
 	((loop++))
 	if [[ $loop -gt 100 ]];
 		echo "timeout"
