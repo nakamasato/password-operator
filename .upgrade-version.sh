@@ -493,7 +493,7 @@ git add . && git commit -am "[API] Implement validating admission webhook"
 
 # Update README
 
-sed -i 's/.*simple overview.*/Example Kubernetes Operator project created with kubebuilder, which manages a CRD \`Password\` and generates a configurable password./' README.md
+gsed -i 's/.*simple overview.*/Example Kubernetes Operator project created with kubebuilder, which manages a CRD \`Password\` and generates a configurable password./' README.md
 
 {
 	echo "1. Docker Engine: $(docker version | grep -A 2 Server: | grep Version | sed 's/Version: *\([0-9\.]*\)/\1/')"

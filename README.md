@@ -1,5 +1,5 @@
 # password-operator
-// TODO(user): Add simple overview of use/purpose
+Example Kubernetes Operator project created with kubebuilder, which manages a CRD `Password` and generates a configurable password.
 
 ## Description
 1. go: go1.18
