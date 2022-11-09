@@ -143,9 +143,9 @@ git commit -am "[Controller] Fetch Password object"
 
 
 ## 6. [Controller] Create Secret object if not exists
-gsed -i '/^import/a corev1 "k8s.io/api/core/v1"' $PASSWORD_CONTROLLER_GO_FILE
-gsed -i '/^import/a "k8s.io/apimachinery/pkg/api/errors"' $PASSWORD_CONTROLLER_GO_FILE
-gsed -i '/^import/a metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"' $PASSWORD_CONTROLLER_GO_FILE
+gsed -i '/sigs.k8s.io\/controller-runtime\/pkg\/log/a \\ncorev1 "k8s.io/api/core/v1"' $PASSWORD_CONTROLLER_GO_FILE
+gsed -i '/corev1 "k8s.io\/api\/core\/v1"/a "k8s.io/apimachinery/pkg/api/errors"' $PASSWORD_CONTROLLER_GO_FILE
+gsed -i '/"k8s.io\/apimachinery\/pkg\/api\/errors"/a metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"' $PASSWORD_CONTROLLER_GO_FILE
 
 cat << EOF > tmpfile
 
@@ -220,7 +220,7 @@ git commit -am "[Controller] Clean up Secret when Password is deleted"
 
 
 ## 8. [Controller] Generate random password
-gsed -i '/^import/a passwordGenerator "github.com/sethvargo/go-password/password"' $PASSWORD_CONTROLLER_GO_FILE
+gsed -i '/secretv1alpha1 "example.com\/password-operator\/api\/v1alpha1"/a passwordGenerator "github.com/sethvargo/go-password/password"' $PASSWORD_CONTROLLER_GO_FILE
 
 # Update the way to generate password
 cat << EOF > tmpfile
@@ -343,6 +343,16 @@ gsed -i "/type PasswordStatus struct {/,/^}/c $(sed 's/$/\\n/' tmpfile | tr -d '
 make manifests
 
 cat << EOF > tmpfile
+password.Status.State = secretv1alpha1.PasswordFailed
+if err := r.Status().Update(ctx, &password); err != nil {
+    logger.Error(err, "Failed to update Password status")
+    return ctrl.Result{}, err
+}
+EOF
+# Add the contents before returning the error
+gsed -i $'/^\t\treturn ctrl.Result{}, err/{e cat tmpfile\n}' $PASSWORD_CONTROLLER_GO_FILE
+
+cat << EOF > tmpfile
 
     password.Status.State = secretv1alpha1.PasswordInSync
     if err := r.Status().Update(ctx, &password); err != nil {
@@ -353,16 +363,6 @@ EOF
 # Add the contents before the last return in Reconcile function.
 gsed -i $'/^\treturn ctrl.Result{}, nil/{e cat tmpfile\n}' $PASSWORD_CONTROLLER_GO_FILE
 
-
-cat << EOF > tmpfile
-password.Status.State = secretv1alpha1.PasswordFailed
-if err := r.Status().Update(ctx, &password); err != nil {
-    logger.Error(err, "Failed to update Password status")
-    return ctrl.Result{}, err
-}
-EOF
-# Add the contents before returning the error
-gsed -i $'/return ctrl.Result{}, err/{e cat tmpfile\n}' $PASSWORD_CONTROLLER_GO_FILE
 rm tmpfile
 make fmt install
 
