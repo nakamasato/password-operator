@@ -480,3 +480,12 @@ kubectl delete -f https://github.com/cert-manager/cert-manager/releases/download
 git add .
 pre-commit run -a || true
 git add . && git commit -am "[API] Implement validating admission webhook"
+
+# Version
+
+echo "1. go: $(go version | sed 's/go version \(.*\) .*/\1/')"
+echo "1. kubebuilder: $(kubebuilder version | sed 's/.*KubeBuilderVersion:"\([0-9\.]*\)".*/\1/')"
+echo "1. Kubernetes: $(kubectl version --output=json | jq -r .serverVersion.gitVersion)"
+echo "1. kind: $(kind version | sed 's/kind \(v[0-9\.]*\) .*/\1/' )"
+echo "1. kustomize: $(bin/kustomize version | sed 's/.*Version:kustomize\/\(v[0-9\.]*\).*/\1/')"
+echo "1. cert-manager: $CERT_MANAGER_VERSION"
