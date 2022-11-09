@@ -481,11 +481,21 @@ git add .
 pre-commit run -a || true
 git add . && git commit -am "[API] Implement validating admission webhook"
 
-# Version
+# Update README
 
-echo "1. go: $(go version | sed 's/go version \(.*\) .*/\1/')"
-echo "1. kubebuilder: $(kubebuilder version | sed 's/.*KubeBuilderVersion:"\([0-9\.]*\)".*/\1/')"
-echo "1. Kubernetes: $(kubectl version --output=json | jq -r .serverVersion.gitVersion)"
-echo "1. kind: $(kind version | sed 's/kind \(v[0-9\.]*\) .*/\1/' )"
-echo "1. kustomize: $(bin/kustomize version | sed 's/.*Version:kustomize\/\(v[0-9\.]*\).*/\1/')"
-echo "1. cert-manager: $CERT_MANAGER_VERSION"
+sed -i 's/.*simple overview.*/Example Kubernetes Operator project created with kubebuilder, which manages a CRD \`Password\` and generates a configurable password./' README.md
+
+{
+	echo "1. Docker Engine: $(docker version | grep -A 2 Server: | grep Version | sed 's/Version: *\([0-9\.]*\)/\1/')"
+	echo "1. go: $(go version | sed 's/go version \(.*\) .*/\1/')"
+	echo "1. kubebuilder: $(kubebuilder version | sed 's/.*KubeBuilderVersion:"\([0-9\.]*\)".*/\1/')"
+	echo "1. Kubernetes: $(kubectl version --output=json | jq -r .serverVersion.gitVersion)"
+	echo "1. kind: $(kind version | sed 's/kind \(v[0-9\.]*\) .*/\1/' )"
+	echo "1. kustomize: $(bin/kustomize version | sed 's/.*Version:kustomize\/\(v[0-9\.]*\).*/\1/')"
+	echo "1. cert-manager: $CERT_MANAGER_VERSION"
+} > tmpfile
+gsed -i 's/.*in-depth.*/cat tmpfile/e' README.md
+rm tmpfile
+git add .
+pre-commit run -a || true
+git add . && git commit -am "Update README"
