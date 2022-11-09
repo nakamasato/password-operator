@@ -414,7 +414,7 @@ func (r *Password) ValidateUpdate(old runtime.Object) error {
 	return r.validatePassword()
 }
 EOF
-gsed -i "/func (r \*Password) ValidateUpdate() error {/,/^}/c $(sed 's/$/\\n/' tmpfile | tr -d '\n' | sed 's/.\{2\}$//')" $PASSWORD_WEBHOOK_FILE
+gsed -i "/func (r \*Password) ValidateUpdate(old runtime.Object) error {/,/^}/c $(sed 's/$/\\n/' tmpfile | tr -d '\n' | sed 's/.\{2\}$//')" $PASSWORD_WEBHOOK_FILE
 
 # add validatePassword at the bottom
 cat << EOF >> $PASSWORD_WEBHOOK_FILE
@@ -422,7 +422,7 @@ cat << EOF >> $PASSWORD_WEBHOOK_FILE
 var ErrSumOfDigitAndSymbolMustBeLessThanLength = errors.New("Number of digits and symbols must be less than total length")
 
 func (r *Password) validatePassword() error {
-	if r.Spec.Digit+r.Spec.Symbol >= r.Spec.Length {
+	if r.Spec.Digit+r.Spec.Symbol > r.Spec.Length {
 		return ErrSumOfDigitAndSymbolMustBeLessThanLength
 	}
 	return nil
