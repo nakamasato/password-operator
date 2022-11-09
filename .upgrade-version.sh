@@ -350,7 +350,7 @@ if err := r.Status().Update(ctx, &password); err != nil {
 }
 EOF
 # Add the contents before returning the error
-gsed -i $'/^\t\treturn ctrl.Result{}, err/{e cat tmpfile\n}' $PASSWORD_CONTROLLER_GO_FILE
+gsed -i $'/return ctrl.Result{}, err/{e cat tmpfile\n}' $PASSWORD_CONTROLLER_GO_FILE
 
 cat << EOF > tmpfile
 
