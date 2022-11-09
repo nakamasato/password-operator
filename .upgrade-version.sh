@@ -469,7 +469,7 @@ while [ $(kubectl get po -n password-operator-system -o 'jsonpath={.items[].stat
 	sleep 5
 	echo 'waiting for Pod readiness'
 	((loop++))
-	if [[ $loop -gt 100 ]] then;
+	if [[ $loop -gt 100 ]]; then
 		echo "timeout"
 		exit 1
 	fi
