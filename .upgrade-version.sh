@@ -460,7 +460,17 @@ make docker-build IMG=$IMG
 kind load docker-image $IMG
 make deploy IMG=$IMG
 # need to wait
-while [ $(kubectl get po -n password-operator-system -o json | jq '.items | length') != "1" ]; do
+while [ $(kubectl get po -n cert-manager -o json | jq '.items | length') != "3" ]; do # wait cert manager
+	sleep 5
+	echo "waiting for 3 cert-manager Pods creation"
+done
+
+while [ $(kubectl get po -n cert-manager -o 'jsonpath={.items[*].status.containerStatuses[*]}' | jq '.ready' | uniq) != "true" ]; do
+	sleep 5
+	echo "waiting for 3 cert-manager Pods readiness"
+done
+
+while [ $(kubectl get po -n password-operator-system -o json | jq '.items | length') != "1" ]; do # wait operator manager Pod
 	sleep 5
 	echo "waiting for Pod creation"
 done
