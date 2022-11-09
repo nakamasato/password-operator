@@ -508,7 +508,6 @@ gsed -i "s/.*1\. kind.*/1. kind: $(kind version | sed 's/kind \(v[0-9\.]*\) .*/\
 gsed -i "s/.*1\. kustomize.*/1. kustomize: $(bin/kustomize version | sed 's/.*Version:kustomize\/\(v[0-9\.]*\).*/\1/')/g" README.md
 gsed -i "s/.*1\. cert-manager.*/1. cert-manager: $CERT_MANAGER_VERSION/g" README.md
 
-rm tmpfile
 git add .
 pre-commit run -a || true
 git add . && git commit -am "Update README"
