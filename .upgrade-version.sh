@@ -460,8 +460,16 @@ make docker-build IMG=$IMG
 kind load docker-image $IMG
 make deploy IMG=$IMG
 # need to wait
-sleep 30
-test "$(kubectl get po -n password-operator-system -o jsonpath='{.items[].status.containerStatuses[].state.running}' | jq length)" = "1"
+loop=0
+while [ $(kubectl get po -n password-operator-system -o 'jsonpath={.items[].status.containerStatuses[].ready}') != true ]; do
+	sleep 5
+	echo 'waiting'
+	((loop++))
+	if [[ $loop -gt 100 ]];
+		echo "timeout"
+		exit 1
+	fi
+done
 make undeploy
 kubectl delete -f https://github.com/cert-manager/cert-manager/releases/download/$CERT_MANAGER_VERSION/cert-manager.yaml
 
