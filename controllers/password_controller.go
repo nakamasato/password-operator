@@ -80,6 +80,11 @@ func (r *PasswordReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			)
 			if err != nil {
 				logger.Error(err, "Create Secret object if not exists - failed to generate password")
+				password.Status.State = secretv1alpha1.PasswordFailed
+				if err := r.Status().Update(ctx, &password); err != nil {
+					logger.Error(err, "Failed to update Password status")
+					return ctrl.Result{}, err
+				}
 				return ctrl.Result{}, err
 			}
 			secret := newSecretFromPassword(&password, passwordStr)
@@ -87,21 +92,47 @@ func (r *PasswordReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 			err = ctrl.SetControllerReference(&password, secret, r.Scheme) // Set owner of this Secret
 			if err != nil {
 				logger.Error(err, "Create Secret object if not exists - failed to set SetControllerReference")
+				password.Status.State = secretv1alpha1.PasswordFailed
+				if err := r.Status().Update(ctx, &password); err != nil {
+					logger.Error(err, "Failed to update Password status")
+					return ctrl.Result{}, err
+				}
 				return ctrl.Result{}, err
 			}
 			err = r.Create(ctx, secret)
 			if err != nil {
 				logger.Error(err, "Create Secret object if not exists - failed to create Secret")
+				password.Status.State = secretv1alpha1.PasswordFailed
+				if err := r.Status().Update(ctx, &password); err != nil {
+					logger.Error(err, "Failed to update Password status")
+					return ctrl.Result{}, err
+				}
 				return ctrl.Result{}, err
 			}
 			logger.Info("Create Secret object if not exists - Secret successfully created")
 		} else {
 			logger.Error(err, "Create Secret object if not exists - failed to fetch Secret")
+			password.Status.State = secretv1alpha1.PasswordFailed
+			if err := r.Status().Update(ctx, &password); err != nil {
+				logger.Error(err, "Failed to update Password status")
+				return ctrl.Result{}, err
+			}
 			return ctrl.Result{}, err
 		}
 	}
 
 	logger.Info("Create Secret object if not exists - completed")
+
+	password.Status.State = secretv1alpha1.PasswordInSync
+	if err := r.Status().Update(ctx, &password); err != nil {
+		logger.Error(err, "Failed to update Password status")
+		password.Status.State = secretv1alpha1.PasswordFailed
+		if err := r.Status().Update(ctx, &password); err != nil {
+			logger.Error(err, "Failed to update Password status")
+			return ctrl.Result{}, err
+		}
+		return ctrl.Result{}, err
+	}
 	return ctrl.Result{}, nil
 }
 
