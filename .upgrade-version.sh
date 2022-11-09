@@ -4,7 +4,9 @@ set -eux
 
 PASSWORD_CONTROLLER_GO_FILE=controllers/password_controller.go
 PASSWORD_GO_TYPE_FILE=api/v1alpha1/password_types.go
+PASSWORD_WEBHOOK_FILE=api/v1alpha1/password_webhook.go
 SAMPLE_YAML_FILE=config/samples/secret_v1alpha1_password.yaml
+CERT_MANAGER_VERSION=v1.8.0
 export KUSTOMIZE_VERSION=v4.5.5
 
 # 0. Clean up
@@ -391,3 +393,78 @@ make manifests
 git add .
 pre-commit run -a || true
 git add . && git commit -am "[kubebuilder] Create validating admission webhook"
+
+# 13. [API] Implement Validating Admission Webhook
+
+# Replace ValidateCreate
+cat << EOF > tmpfile
+func (r *Password) ValidateCreate() error {
+	passwordlog.Info("validate create", "name", r.Name)
+
+	return r.validatePassword()
+}
+EOF
+gsed -i "/func (r \*Password) ValidateCreate() error {/,/^}/c $(sed 's/$/\\n/' tmpfile | tr -d '\n' | sed 's/.\{2\}$//')" $PASSWORD_WEBHOOK_FILE
+
+# Replace ValidateUpdate
+cat << EOF > tmpfile
+func (r *Password) ValidateUpdate(old runtime.Object) error {
+	passwordlog.Info("validate update", "name", r.Name)
+
+	return r.validatePassword()
+}
+EOF
+gsed -i "/func (r \*Password) ValidateUpdate() error {/,/^}/c $(sed 's/$/\\n/' tmpfile | tr -d '\n' | sed 's/.\{2\}$//')" $PASSWORD_WEBHOOK_FILE
+
+# add validatePassword at the bottom
+cat << EOF >> $PASSWORD_WEBHOOK_FILE
+
+var ErrSumOfDigitAndSymbolMustBeLessThanLength = errors.New("Number of digits and symbols must be less than total length")
+
+func (r *Password) validatePassword() error {
+	if r.Spec.Digit+r.Spec.Symbol >= r.Spec.Length {
+		return ErrSumOfDigitAndSymbolMustBeLessThanLength
+	}
+	return nil
+}
+EOF
+rm tmpfile
+
+# add "k8s.io/apimachinery/pkg/api/errors" to import
+gsed -i '/^import/a "errors"' $PASSWORD_WEBHOOK_FILE
+make fmt
+
+# comment out
+gsed -i -e '/fieldSpecs/,+3 s/^\(.*\): \(.*\)/#\1: \2/' config/webhook/kustomizeconfig.yaml
+gsed -i -e '/namespace:/,+4 s/^\(.*\): \(.*\)/#\1: \2/' config/webhook/kustomizeconfig.yaml
+
+gsed -i -e '/MutatingWebhookConfiguration/,+4 s/^/#/' config/default/webhookcainjection_patch.yaml
+gsed -i '0,/apiVersion/s/apiVersion/#apiVersion/' config/default/webhookcainjection_patch.yaml
+
+# uncomment
+
+gsed -i 's/#- ..\/webhook/- ..\/webhook/g' config/default/kustomization.yaml
+gsed -i 's/#- ..\/certmanager/- ..\/certmanager/g' config/default/kustomization.yaml
+gsed -i 's/#- manager_webhook_patch.yaml/- manager_webhook_patch.yaml/g' config/default/kustomization.yaml
+gsed -i 's/#- webhookcainjection_patch.yaml/- webhookcainjection_patch.yaml/g' config/default/kustomization.yaml
+gsed -i -e '/CERTIFICATE_NAMESPACE/,+25 s/#//' config/default/kustomization.yaml
+gsed -i 's/#- patches/- patches/g' config/crd/kustomization.yaml
+
+make install
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/$CERT_MANAGER_VERSION/cert-manager.yaml
+if [ -f bin/kustomize ]; then
+	rm bin/kustomize
+fi
+IMG=password-operator:webhook
+make docker-build IMG=$IMG
+kind load docker-image $IMG
+make deploy IMG=$IMG
+# need to wait
+sleep 30
+test "$(kubectl get po -n password-operator-system -o jsonpath='{.items[].status.containerStatuses[].state.running}' | jq length)" = "1"
+make undeploy
+kubectl delete -f https://github.com/cert-manager/cert-manager/releases/download/$CERT_MANAGER_VERSION/cert-manager.yaml
+
+git add .
+pre-commit run -a || true
+git add . && git commit -am "[API] Implement validating admission webhook"
