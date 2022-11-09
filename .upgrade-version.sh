@@ -462,6 +462,7 @@ while [ $(kubectl get po -n cert-manager -o 'jsonpath={.items[*].status.containe
 	sleep 5
 	echo "waiting for 3 cert-manager Pods readiness"
 done
+echo "cert-manager is ready"
 
 if [ -f bin/kustomize ]; then
 	rm bin/kustomize
@@ -495,18 +496,18 @@ git add . && git commit -am "[API] Implement validating admission webhook"
 
 # Update README
 
-gsed -i 's/.*simple overview.*/Example Kubernetes Operator project created with kubebuilder, which manages a CRD \`Password\` and generates a configurable password./' README.md
+# Description
+gsed -i '/# password-operator/{n;s/.*/Example Kubernetes Operator project created with kubebuilder, which manages a CRD \`Password\` and generates a configurable password./}' README.md
 
-{
-	echo "1. Docker Engine: $(docker version | grep -A 2 Server: | grep Version | sed 's/Version: *\([0-9\.]*\)/\1/')"
-	echo "1. go: $(go version | sed 's/go version \(.*\) .*/\1/')"
-	echo "1. kubebuilder: $(kubebuilder version | sed 's/.*KubeBuilderVersion:"\([0-9\.]*\)".*/\1/')"
-	echo "1. Kubernetes: $(kubectl version --output=json | jq -r .serverVersion.gitVersion)"
-	echo "1. kind: $(kind version | sed 's/kind \(v[0-9\.]*\) .*/\1/' )"
-	echo "1. kustomize: $(bin/kustomize version | sed 's/.*Version:kustomize\/\(v[0-9\.]*\).*/\1/')"
-	echo "1. cert-manager: $CERT_MANAGER_VERSION"
-} > tmpfile
-gsed -i 's/.*in-depth.*/cat tmpfile/e' README.md
+# Versions
+gsed -i "s/.*Docker Engine.*/1. Docker Engine: $(docker version | grep -A 2 Server: | grep Version | sed 's/Version: *\([0-9\.]*\)/\1/' | xargs)/g" README.md
+gsed -i "s/.*1\. go:.*/1. go: $(go version | sed 's/go version \(.*\) .*/\1/')/g" README.md
+gsed -i "s/.*1\. kubebuilder.*/1. kubebuilder: $(kubebuilder version | sed 's/.*KubeBuilderVersion:"\([0-9\.]*\)".*/\1/')/g" README.md
+gsed -i "s/.*1\. Kubernetes.*/1. Kubernetes: $(kubectl version --output=json | jq -r .serverVersion.gitVersion)/g" README.md
+gsed -i "s/.*1\. kind.*/1. kind: $(kind version | sed 's/kind \(v[0-9\.]*\) .*/\1/' )/g" README.md
+gsed -i "s/.*1\. kustomize.*/1. kustomize: $(bin/kustomize version | sed 's/.*Version:kustomize\/\(v[0-9\.]*\).*/\1/')/g" README.md
+gsed -i "s/.*1\. cert-manager.*/1. cert-manager: $CERT_MANAGER_VERSION/g" README.md
+
 rm tmpfile
 git add .
 pre-commit run -a || true

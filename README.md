@@ -1,7 +1,8 @@
 # password-operator
 Example Kubernetes Operator project created with kubebuilder, which manages a CRD `Password` and generates a configurable password.
 
-## Description
+## Versions
+1. Docker Engine: 20.10.20
 1. go: go1.18
 1. kubebuilder: 3.5.0
 1. Kubernetes: v1.25.3
