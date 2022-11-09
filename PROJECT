@@ -1,0 +1,6 @@
+domain: example.com
+layout:
+- go.kubebuilder.io/v3
+projectName: password-operator
+repo: example.com/password-operator
+version: "3"
