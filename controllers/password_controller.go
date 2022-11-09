@@ -51,7 +51,7 @@ type PasswordReconciler struct {
 // the user.
 //
 // For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.11.2/pkg/reconcile
+// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.12.1/pkg/reconcile
 func (r *PasswordReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 
@@ -89,6 +89,7 @@ func (r *PasswordReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 				return ctrl.Result{}, err
 			}
 			secret := newSecretFromPassword(&password, passwordStr)
+
 			err = ctrl.SetControllerReference(&password, secret, r.Scheme) // Set owner of this Secret
 			if err != nil {
 				logger.Error(err, "Create Secret object if not exists - failed to set SetControllerReference")

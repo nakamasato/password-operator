@@ -20,6 +20,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+type PasswordState string
+
+const (
+	PasswordInSync PasswordState = "InSync"
+	PasswordFailed PasswordState = "Failed"
+)
+
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
@@ -43,18 +50,10 @@ type PasswordSpec struct {
 	//+kubebuilder:default:=false
 	//+kubebuilder:validation:Optional
 	CaseSensitive bool `json:"caseSensitive"`
-
 	//+kubebuilder:default:=false
 	//+kubebuilder:validation:Optional
 	DisallowRepeat bool `json:"disallowRepeat"`
 }
-
-type PasswordState string
-
-const (
-	PasswordInSync PasswordState = "InSync"
-	PasswordFailed PasswordState = "Failed"
-)
 
 // PasswordStatus defines the observed state of Password
 type PasswordStatus struct {
@@ -65,8 +64,8 @@ type PasswordStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
-//+kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
 //+kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
+//+kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
 
 // Password is the Schema for the passwords API
 type Password struct {
