@@ -452,15 +452,8 @@ gsed -i 's/#- patches/- patches/g' config/crd/kustomization.yaml
 
 make install
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/$CERT_MANAGER_VERSION/cert-manager.yaml
-if [ -f bin/kustomize ]; then
-	rm bin/kustomize
-fi
-IMG=password-operator:webhook
-make docker-build IMG=$IMG
-kind load docker-image $IMG
-make deploy IMG=$IMG
-# need to wait
-while [ $(kubectl get po -n cert-manager -o json | jq '.items | length') != "3" ]; do # wait cert manager
+# wait cert manager
+while [ $(kubectl get po -n cert-manager -o json | jq '.items | length') != "3" ]; do
 	sleep 5
 	echo "waiting for 3 cert-manager Pods creation"
 done
@@ -470,7 +463,16 @@ while [ $(kubectl get po -n cert-manager -o 'jsonpath={.items[*].status.containe
 	echo "waiting for 3 cert-manager Pods readiness"
 done
 
-while [ $(kubectl get po -n password-operator-system -o json | jq '.items | length') != "1" ]; do # wait operator manager Pod
+if [ -f bin/kustomize ]; then
+	rm bin/kustomize
+fi
+IMG=password-operator:webhook
+make docker-build IMG=$IMG
+kind load docker-image $IMG
+make deploy IMG=$IMG
+
+# wait operator manager Pod
+while [ $(kubectl get po -n password-operator-system -o json | jq '.items | length') != "1" ]; do
 	sleep 5
 	echo "waiting for Pod creation"
 done
