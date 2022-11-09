@@ -103,6 +103,12 @@ func (r *PasswordReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	}
 
 	logger.Info("Create Secret object if not exists - completed")
+
+	password.Status.State = secretv1alpha1.PasswordInSync
+	if err := r.Status().Update(ctx, &password); err != nil {
+		logger.Error(err, "Failed to update Password status")
+		return ctrl.Result{}, err
+	}
 	return ctrl.Result{}, nil
 }
 
