@@ -1,0 +1,52 @@
+name: publish-release
+
+on:
+  pull_request:
+    types:
+      - closed
+    branches:
+      - main
+
+jobs:
+  release:
+    if: ${{ github.event.pull_request.merged == true && contains( github.event.pull_request.labels.*.name, 'release') }}
+    runs-on: ubuntu-latest
+    env:
+      PUBLISH_RELEASE_SCRIPT: ./.publish-release.sh
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: main
+
+      - uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `PR has been merged. we're publishing a new release! (${new Date()})`
+            })
+      - name: git config
+        run: |
+          git config --global user.email "release@github.com"
+          git config --global user.name "GitHub Actions"
+      - name: release
+        id: release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          sh $PUBLISH_RELEASE_SCRIPT
+          release_tag=$(gh release view --json tagName | jq -r .tagName)
+          release_url=$(gh release view --json url | jq -r .url)
+          echo "::set-output name=release_tag::$release_tag"
+          echo "::set-output name=release_url::$release_url"
+      - uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: `New release [${{ steps.release.outputs.release_tag }}](${{ steps.release.outputs.release_url }}) has been published! (${new Date()})`
+            })
