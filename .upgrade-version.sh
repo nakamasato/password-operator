@@ -9,6 +9,42 @@ SAMPLE_YAML_FILE=config/samples/secret_v1alpha1_password.yaml
 CERT_MANAGER_VERSION=v1.8.0
 export KUSTOMIZE_VERSION=v4.5.5
 
+get_latest_release() {
+	limit=${2:-5}
+	curl --silent "https://api.github.com/repos/$1/releases" | jq -r '.[].tag_name' | head -n $limit
+}
+
+# kubebuidler version
+if [ $# -eq 0 ]; then
+	echo "specify kubebuilder version"
+	get_latest_release "kubernetes-sigs/kubebuilder"
+	exit 1
+fi
+
+if [[ ! "$1" =~ ^v[0-9].[0-9].[0-9]$ ]];then
+	echo "kubebuilder version format '$1' is invalid"
+	get_latest_release "kubernetes-sigs/kubebuilder"
+	exit 1
+fi
+
+KUBEBUILDER_VERSION=$1
+echo "kubebuilder version: $KUBEBUILDER_VERSION"
+
+read -r -p "Are you to upgrade to kubebuilder version $KUBEBUILDER_VERSION? [y/N] " response
+case "$response" in
+    [yY][eE][sS]|[yY])
+        echo "start upgrading"
+        ;;
+    *)
+        exit 1
+        ;;
+esac
+
+curl -sS -L -o kubebuilder https://github.com/kubernetes-sigs/kubebuilder/releases/download/${KUBEBUILDER_VERSION}/kubebuilder_$(go env GOOS)_$(go env GOARCH)
+chmod +x kubebuilder
+mv kubebuilder /usr/local/bin/
+echo "install finished"
+
 # 0. Clean up
 echo "======== CLEAN UP ==========="
 
