@@ -489,12 +489,12 @@ gsed -i 's/#- patches/- patches/g' config/crd/kustomization.yaml
 make install
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/$CERT_MANAGER_VERSION/cert-manager.yaml
 # wait cert manager
-while [ $(kubectl get po -n cert-manager -o json | jq '.items | length') != "3" ]; do
+while [ "$(kubectl get po -n cert-manager -o json | jq '.items | length')" != "3" ]; do
 	sleep 5
 	echo "waiting for 3 cert-manager Pods creation"
 done
 
-while [ $(kubectl get po -n cert-manager -o 'jsonpath={.items[*].status.containerStatuses[*]}' | jq '.ready' | uniq) != "true" ]; do
+while [ "$(kubectl get po -n cert-manager -o 'jsonpath={.items[*].status.containerStatuses[*]}' | jq '.ready' | uniq)" != "true" ]; do
 	sleep 5
 	echo "waiting for 3 cert-manager Pods readiness"
 done
