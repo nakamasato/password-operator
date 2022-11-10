@@ -24,6 +24,10 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	secretv1alpha1 "example.com/password-operator/api/v1alpha1"
 )
 
@@ -36,6 +40,7 @@ type PasswordReconciler struct {
 //+kubebuilder:rbac:groups=secret.example.com,resources=passwords,verbs=get;list;watch;create;update;patch;delete
 //+kubebuilder:rbac:groups=secret.example.com,resources=passwords/status,verbs=get;update;patch
 //+kubebuilder:rbac:groups=secret.example.com,resources=passwords/finalizers,verbs=update
+//+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch;create;
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
 // move the current state of the cluster closer to the desired state.
@@ -59,6 +64,27 @@ func (r *PasswordReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 	}
 
 	logger.Info("Fetch Password object - succeeded", "password", password.Name, "createdAt", password.CreationTimestamp)
+
+	// Create Secret object if not exists
+	var secret corev1.Secret
+	if err := r.Get(ctx, req.NamespacedName, &secret); err != nil {
+		if errors.IsNotFound(err) {
+			// Create Secret
+			logger.Info("Create Secret object if not exists - create secret")
+			secret := newSecretFromPassword(&password)
+			err = r.Create(ctx, secret)
+			if err != nil {
+				logger.Error(err, "Create Secret object if not exists - failed to create Secret")
+				return ctrl.Result{}, err
+			}
+			logger.Info("Create Secret object if not exists - Secret successfully created")
+		} else {
+			logger.Error(err, "Create Secret object if not exists - failed to fetch Secret")
+			return ctrl.Result{}, err
+		}
+	}
+
+	logger.Info("Create Secret object if not exists - completed")
 	return ctrl.Result{}, nil
 }
 
@@ -67,4 +93,17 @@ func (r *PasswordReconciler) SetupWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewControllerManagedBy(mgr).
 		For(&secretv1alpha1.Password{}).
 		Complete(r)
+}
+
+func newSecretFromPassword(password *secretv1alpha1.Password) *corev1.Secret {
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      password.Name,
+			Namespace: password.Namespace,
+		},
+		Data: map[string][]byte{
+			"password": []byte("123456789"), // password=123456789
+		},
+	}
+	return secret
 }
