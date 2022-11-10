@@ -474,7 +474,7 @@ make fmt
 gsed -i -e '/fieldSpecs/,+3 s/^\(.*\): \(.*\)/#\1: \2/' config/webhook/kustomizeconfig.yaml
 gsed -i -e '/namespace:/,+4 s/^\(.*\): \(.*\)/#\1: \2/' config/webhook/kustomizeconfig.yaml
 
-gsed -i -e '/MutatingWebhookConfiguration/,+4 s/^/#/' config/default/webhookcainjection_patch.yaml
+gsed -i -e '/MutatingWebhookConfiguration/,+11 s/^/#/' config/default/webhookcainjection_patch.yaml
 gsed -i '0,/apiVersion/s/apiVersion/#apiVersion/' config/default/webhookcainjection_patch.yaml
 
 # uncomment
