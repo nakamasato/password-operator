@@ -1,8 +1,14 @@
 # password-operator
-// TODO(user): Add simple overview of use/purpose
+Example Kubernetes Operator project created with kubebuilder, which manages a CRD `Password` and generates a configurable password.
 
-## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+## Versions
+1. Docker Engine: 20.10.20
+1. go: go1.18
+1. kubebuilder: 3.5.0
+1. Kubernetes: v1.25.3
+1. kind: v0.17.0
+1. kustomize: v4.5.5
+1. cert-manager: v1.8.0
 
 ## Getting Started
 You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.

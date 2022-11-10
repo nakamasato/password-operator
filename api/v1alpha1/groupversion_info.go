@@ -15,8 +15,8 @@ limitations under the License.
 */
 
 // Package v1alpha1 contains API Schema definitions for the secret v1alpha1 API group
-// +kubebuilder:object:generate=true
-// +groupName=secret.example.com
+//+kubebuilder:object:generate=true
+//+groupName=secret.example.com
 package v1alpha1
 
 import (

@@ -452,6 +452,18 @@ gsed -i 's/#- patches/- patches/g' config/crd/kustomization.yaml
 
 make install
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/$CERT_MANAGER_VERSION/cert-manager.yaml
+# wait cert manager
+while [ $(kubectl get po -n cert-manager -o json | jq '.items | length') != "3" ]; do
+	sleep 5
+	echo "waiting for 3 cert-manager Pods creation"
+done
+
+while [ $(kubectl get po -n cert-manager -o 'jsonpath={.items[*].status.containerStatuses[*]}' | jq '.ready' | uniq) != "true" ]; do
+	sleep 5
+	echo "waiting for 3 cert-manager Pods readiness"
+done
+echo "cert-manager is ready"
+
 if [ -f bin/kustomize ]; then
 	rm bin/kustomize
 fi
@@ -459,7 +471,8 @@ IMG=password-operator:webhook
 make docker-build IMG=$IMG
 kind load docker-image $IMG
 make deploy IMG=$IMG
-# need to wait
+
+# wait operator manager Pod
 while [ $(kubectl get po -n password-operator-system -o json | jq '.items | length') != "1" ]; do
 	sleep 5
 	echo "waiting for Pod creation"
@@ -480,3 +493,21 @@ kubectl delete -f https://github.com/cert-manager/cert-manager/releases/download
 git add .
 pre-commit run -a || true
 git add . && git commit -am "[API] Implement validating admission webhook"
+
+# Update README
+
+# Description
+gsed -i '/# password-operator/{n;s/.*/Example Kubernetes Operator project created with kubebuilder, which manages a CRD \`Password\` and generates a configurable password./}' README.md
+
+# Versions
+gsed -i "s/.*Docker Engine.*/1. Docker Engine: $(docker version | grep -A 2 Server: | grep Version | sed 's/Version: *\([0-9\.]*\)/\1/' | xargs)/g" README.md
+gsed -i "s/.*1\. go:.*/1. go: $(go version | sed 's/go version \(.*\) .*/\1/')/g" README.md
+gsed -i "s/.*1\. kubebuilder.*/1. kubebuilder: $(kubebuilder version | sed 's/.*KubeBuilderVersion:"\([0-9\.]*\)".*/\1/')/g" README.md
+gsed -i "s/.*1\. Kubernetes.*/1. Kubernetes: $(kubectl version --output=json | jq -r .serverVersion.gitVersion)/g" README.md
+gsed -i "s/.*1\. kind.*/1. kind: $(kind version | sed 's/kind \(v[0-9\.]*\) .*/\1/' )/g" README.md
+gsed -i "s/.*1\. kustomize.*/1. kustomize: $(bin/kustomize version | sed 's/.*Version:kustomize\/\(v[0-9\.]*\).*/\1/')/g" README.md
+gsed -i "s/.*1\. cert-manager.*/1. cert-manager: $CERT_MANAGER_VERSION/g" README.md
+
+git add .
+pre-commit run -a || true
+git add . && git commit -am "Update README"
