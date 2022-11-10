@@ -29,6 +29,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	secretv1alpha1 "example.com/password-operator/api/v1alpha1"
+	passwordGenerator "github.com/sethvargo/go-password/password"
 )
 
 // PasswordReconciler reconciles a Password object
@@ -71,9 +72,14 @@ func (r *PasswordReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		if errors.IsNotFound(err) {
 			// Create Secret
 			logger.Info("Create Secret object if not exists - create secret")
-			secret := newSecretFromPassword(&password)
+			passwordStr, err := passwordGenerator.Generate(64, 10, 10, false, false)
+			if err != nil {
+				logger.Error(err, "Create Secret object if not exists - failed to generate password")
+				return ctrl.Result{}, err
+			}
+			secret := newSecretFromPassword(&password, passwordStr)
 
-			err := ctrl.SetControllerReference(&password, secret, r.Scheme) // Set owner of this Secret
+			err = ctrl.SetControllerReference(&password, secret, r.Scheme) // Set owner of this Secret
 			if err != nil {
 				logger.Error(err, "Create Secret object if not exists - failed to set SetControllerReference")
 				return ctrl.Result{}, err
@@ -101,14 +107,14 @@ func (r *PasswordReconciler) SetupWithManager(mgr ctrl.Manager) error {
 		Complete(r)
 }
 
-func newSecretFromPassword(password *secretv1alpha1.Password) *corev1.Secret {
+func newSecretFromPassword(password *secretv1alpha1.Password, passwordStr string) *corev1.Secret {
 	secret := &corev1.Secret{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      password.Name,
 			Namespace: password.Namespace,
 		},
 		Data: map[string][]byte{
-			"password": []byte("123456789"), // password=123456789
+			"password": []byte(passwordStr),
 		},
 	}
 	return secret
