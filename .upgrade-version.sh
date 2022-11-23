@@ -61,13 +61,11 @@ for f in `ls` .dockerignore .gitignore; do
     fi
 done
 
-KUBEBUILDER_VERSION_CLI_RESULT=$(kubebuilder version)
-KUBEBUILDER_VERSION_FOR_COMMIT=$(echo ${KUBEBUILDER_VERSION_CLI_RESULT} | sed 's/kubebuilder version: "\([v0-9\.]*\)".*kubernetes version: \"\([v0-9\.]*\)\".* go version: \"\(go[0-9\.]*\)\".*/kubebuilder: \1, kubernetes: \2, go: \3/g')
-KUBEBUILDER_VERSION=$(echo ${KUBEBUILDER_VERSION_CLI_RESULT} | sed 's/kubebuilder version: "\([v0-9\.]*\)".*/\1/g')
+
 GO_VERSION_CLI_RESULT=$(go version)
 GO_VERSION=$(echo ${GO_VERSION_CLI_RESULT} | sed 's/go version \(go[^\s]*\) [^\s]*/\1/')
-echo "KUBEBUILDER_VERSION: $KUBEBUILDER_VERSION_FOR_COMMIT, GO_VERSION: $GO_VERSION_CLI_RESULT"
-commit_message="Remove all files to upgrade versions ($KUBEBUILDER_VERSION_FOR_COMMIT)"
+echo "KUBEBUILDER_VERSION: $KUBEBUILDER_VERSION, GO_VERSION: $GO_VERSION_CLI_RESULT"
+commit_message="Remove all files to upgrade versions ($KUBEBUILDER_VERSION)"
 last_commit_message=$(git log -1 --pretty=%B)
 if [ -n "$(git status --porcelain)" ]; then
     echo "there are changes";
@@ -537,11 +535,13 @@ gsed -i '/# password-operator/{n;s/.*/Example Kubernetes Operator project create
 
 # Versions
 gsed -i "s/.*Docker Engine.*/1. Docker Engine: $(docker version | grep -A 2 Server: | grep Version | sed 's/Version: *\([0-9\.]*\)/\1/' | xargs)/g" README.md
-gsed -i "s/.*1\. go:.*/1. go: $(go version | sed 's/go version \(.*\) .*/\1/')/g" README.md
-gsed -i "s/.*1\. kubebuilder.*/1. kubebuilder: $(kubebuilder version | sed 's/.*KubeBuilderVersion:"\([0-9\.]*\)".*/\1/')/g" README.md
-gsed -i "s/.*1\. Kubernetes.*/1. Kubernetes: $(kubectl version --output=json | jq -r .serverVersion.gitVersion)/g" README.md
-gsed -i "s/.*1\. kind.*/1. kind: $(kind version | sed 's/kind \(v[0-9\.]*\) .*/\1/' )/g" README.md
-gsed -i "s/.*1\. kustomize.*/1. kustomize: $(bin/kustomize version | sed 's/.*Version:kustomize\/\(v[0-9\.]*\).*/\1/')/g" README.md
+gsed -i "s#\[go\](https://github.com/golang/go):.*#[go](https://github.com/golang/go): [${GO_VERSION}](https://github.com/golang/go/releases/${GO_VERSION})#g" README.md
+gsed -i "s#\[kubebuilder\](https://github.com/kubernetes-sigs/kubebuilder):.*#[kubebuilder](https://github.com/kubernetes-sigs/kubebuilder): [${KUBEBUILDER_VERSION}](https://github.com/kubernetes-sigs/kubebuilder/releases/${KUBEBUILDER_VERSION})#g" README.md
+K8S_VERSION=$(kubectl version --output=json | jq -r .serverVersion.gitVersion)
+gsed -i "s#\[Kubernetes\](https://github.com/kubernetes/kubernetes):.*#[Kubernetes](https://github.com/kubernetes/kubernetes):[${K8S_VERSION}](https://github.com/kubernetes/kubernetes/releases/tag/${K8S_VERSION})#g" README.md
+KIND_VERSION=$(kind version | sed 's/kind \(v[0-9\.]*\) .*/\1/')
+gsed -i "s#\[kind\](https://github.com/kubernetes-sigs/kind):.*#[kind](https://github.com/kubernetes-sigs/kind): [${KIND_VERSION}](https://github.com/kubernetes-sigs/kind/releases/tag/${KIND_VERSION})#g" README.md
+gsed -i "s#\[kustomize](https://github.com/kubernetes-sigs/kustomize):.*#[kustomize](https://github.com/kubernetes-sigs/kustomize): [${KUSTOMIZE_VERSION}](https://github.com/kubernetes-sigs/kustomize/releases/tag/${KUSTOMIZE_VERSION})#g" README.md
 gsed -i "s/.*1\. cert-manager.*/1. cert-manager: $CERT_MANAGER_VERSION/g" README.md
 
 git add .
