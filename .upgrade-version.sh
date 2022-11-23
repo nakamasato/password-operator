@@ -9,6 +9,7 @@ SAMPLE_YAML_FILE=config/samples/secret_v1alpha1_password.yaml
 CERT_MANAGER_VERSION=v1.8.0
 export KUSTOMIZE_VERSION=v4.5.5
 
+pre-commit
 get_latest_release() {
 	limit=${2:-5}
 	curl --silent "https://api.github.com/repos/$1/releases" | jq -r '.[].tag_name' | head -n $limit
@@ -61,13 +62,11 @@ for f in `ls` .dockerignore .gitignore; do
     fi
 done
 
-KUBEBUILDER_VERSION_CLI_RESULT=$(kubebuilder version)
-KUBEBUILDER_VERSION_FOR_COMMIT=$(echo ${KUBEBUILDER_VERSION_CLI_RESULT} | sed 's/kubebuilder version: "\([v0-9\.]*\)".*kubernetes version: \"\([v0-9\.]*\)\".* go version: \"\(go[0-9\.]*\)\".*/kubebuilder: \1, kubernetes: \2, go: \3/g')
-KUBEBUILDER_VERSION=$(echo ${KUBEBUILDER_VERSION_CLI_RESULT} | sed 's/kubebuilder version: "\([v0-9\.]*\)".*/\1/g')
+
 GO_VERSION_CLI_RESULT=$(go version)
 GO_VERSION=$(echo ${GO_VERSION_CLI_RESULT} | sed 's/go version \(go[^\s]*\) [^\s]*/\1/')
-echo "KUBEBUILDER_VERSION: $KUBEBUILDER_VERSION_FOR_COMMIT, GO_VERSION: $GO_VERSION_CLI_RESULT"
-commit_message="Remove all files to upgrade versions ($KUBEBUILDER_VERSION_FOR_COMMIT)"
+echo "KUBEBUILDER_VERSION: $KUBEBUILDER_VERSION, GO_VERSION: $GO_VERSION_CLI_RESULT"
+commit_message="Remove all files to upgrade versions ($KUBEBUILDER_VERSION)"
 last_commit_message=$(git log -1 --pretty=%B)
 if [ -n "$(git status --porcelain)" ]; then
     echo "there are changes";
@@ -536,13 +535,7 @@ git add . && git commit -am "[API] Implement validating admission webhook"
 gsed -i '/# password-operator/{n;s/.*/Example Kubernetes Operator project created with kubebuilder, which manages a CRD \`Password\` and generates a configurable password./}' README.md
 
 # Versions
-gsed -i "s/.*Docker Engine.*/1. Docker Engine: $(docker version | grep -A 2 Server: | grep Version | sed 's/Version: *\([0-9\.]*\)/\1/' | xargs)/g" README.md
-gsed -i "s/.*1\. go:.*/1. go: $(go version | sed 's/go version \(.*\) .*/\1/')/g" README.md
-gsed -i "s/.*1\. kubebuilder.*/1. kubebuilder: $(kubebuilder version | sed 's/.*KubeBuilderVersion:"\([0-9\.]*\)".*/\1/')/g" README.md
-gsed -i "s/.*1\. Kubernetes.*/1. Kubernetes: $(kubectl version --output=json | jq -r .serverVersion.gitVersion)/g" README.md
-gsed -i "s/.*1\. kind.*/1. kind: $(kind version | sed 's/kind \(v[0-9\.]*\) .*/\1/' )/g" README.md
-gsed -i "s/.*1\. kustomize.*/1. kustomize: $(bin/kustomize version | sed 's/.*Version:kustomize\/\(v[0-9\.]*\).*/\1/')/g" README.md
-gsed -i "s/.*1\. cert-manager.*/1. cert-manager: $CERT_MANAGER_VERSION/g" README.md
+./.update-readme.sh $KUBEBUILDER_VERSION
 
 git add .
 pre-commit run -a || true
