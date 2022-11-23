@@ -2,12 +2,13 @@ name: check-kubebuilder-release
 
 on:
   schedule:
-    cron: '0 0 * * *'
+    - cron: '0 0 * * *'
 
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v3
       - name: check
         run: |
           latest_version=$(curl --silent "https://api.github.com/repos/kubernetes-sigs/kubebuilder/releases" | jq -r '.[].tag_name' | head -n 1)
