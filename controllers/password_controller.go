@@ -72,7 +72,13 @@ func (r *PasswordReconciler) Reconcile(ctx context.Context, req ctrl.Request) (c
 		if errors.IsNotFound(err) {
 			// Create Secret
 			logger.Info("Create Secret object if not exists - create secret")
-			passwordStr, err := passwordGenerator.Generate(64, 10, 10, false, false)
+			passwordStr, err := passwordGenerator.Generate(
+				password.Spec.Length,
+				password.Spec.Digit,
+				password.Spec.Symbol,
+				password.Spec.CaseSensitive,
+				password.Spec.DisallowRepeat,
+			)
 			if err != nil {
 				logger.Error(err, "Create Secret object if not exists - failed to generate password")
 				return ctrl.Result{}, err
