@@ -3,7 +3,6 @@ name: check-kubebuilder-release
 on:
   schedule:
     - cron: '0 0 * * *'
-  pull_request:
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -18,5 +17,5 @@ jobs:
             echo 'latest'
           else
             echo 'new release exists'
-            gh issue create --title "Upgrade kubebuilder to $latest_version" --body "kubebuilder $latest_version has been released."
+            gh issue create --title "Upgrade kubebuilder to $latest_version" --body "kubebuilder $latest_version has been released." --assignee nakamasato
           fi
