@@ -1,0 +1,21 @@
+name: check-kubebuilder-release
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          latest_version=$(curl --silent "https://api.github.com/repos/kubernetes-sigs/kubebuilder/releases" | jq -r '.[].tag_name' | head -n 1)
+          if [ $(grep kubebuilder README.md | grep -c $latest_version) = "1" ]; then
+            echo 'latest'
+          else
+            echo 'new release exists'
+            gh issue create --title "Upgrade kubebuilder to $latest_version" --body "kubebuilder $latest_version has been released." --assignee nakamasato
+          fi
