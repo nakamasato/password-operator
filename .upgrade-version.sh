@@ -22,7 +22,7 @@ if [ $# -eq 0 ]; then
 	exit 1
 fi
 
-if [[ ! "$1" =~ ^v[0-9].[0-9].[0-9]$ ]];then
+if [[ ! "$1" =~ ^v[0-9]+.[0-9]+.[0-9]+$ ]];then
 	echo "kubebuilder version format '$1' is invalid"
 	get_latest_release "kubernetes-sigs/kubebuilder"
 	exit 1
