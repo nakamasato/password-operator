@@ -29,4 +29,3 @@ jobs:
               gh issue create --title "$title" --body "kubebuilder $latest_version has been released." --assignee nakamasato
             fi
           fi
-
