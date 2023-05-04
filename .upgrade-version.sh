@@ -2,7 +2,7 @@
 
 set -eux
 
-PASSWORD_CONTROLLER_GO_FILE=controllers/password_controller.go
+PASSWORD_CONTROLLER_GO_FILE=internal/controllers/password_controller.go
 PASSWORD_GO_TYPE_FILE=api/v1alpha1/password_types.go
 PASSWORD_WEBHOOK_FILE=api/v1alpha1/password_webhook.go
 SAMPLE_YAML_FILE=config/samples/secret_v1alpha1_password.yaml
