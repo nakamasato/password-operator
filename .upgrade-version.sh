@@ -501,9 +501,6 @@ while [ "$(kubectl get po -n cert-manager -o 'jsonpath={.items[*].status.contain
 done
 echo "cert-manager is ready"
 
-make kustomize # To ensure kustomize is installed
-# To ensure Certificate and Secret exist before starting operator, deploy Namespace and Certificate first.
-bin/kustomize build config/default | yq '. | select(.kind == "Certificate" or .kind == "Namespace")' | kubectl apply -f -
 IMG=password-operator:webhook
 make docker-build IMG=$IMG
 kind load docker-image $IMG
