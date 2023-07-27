@@ -3,11 +3,11 @@ Example Kubernetes Operator project created with kubebuilder, which manages a CR
 
 ## Versions
 1. Docker Engine: 24.0.2
-1. [go](https://github.com/golang/go): [go1.19](https://github.com/golang/go/releases/go1.19)
+1. [go](https://github.com/golang/go): [go1.20.6](https://github.com/golang/go/releases/go1.20.6)
 1. [kubebuilder](https://github.com/kubernetes-sigs/kubebuilder): [v3.10.0](https://github.com/kubernetes-sigs/kubebuilder/releases/v3.10.0)
 1. [Kubernetes](https://github.com/kubernetes/kubernetes): [v1.25.3](https://github.com/kubernetes/kubernetes/releases/tag/v1.25.3)
 1. [kind](https://github.com/kubernetes-sigs/kind): [v0.17.0](https://github.com/kubernetes-sigs/kind/releases/tag/v0.17.0)
-1. [kustomize](https://github.com/kubernetes-sigs/kustomize): [](https://github.com/kubernetes-sigs/kustomize/releases/tag/kustomize%2F)
+1. [kustomize](https://github.com/kubernetes-sigs/kustomize): [v5.0.0](https://github.com/kubernetes-sigs/kustomize/releases/tag/kustomize%2Fv5.0.0)
 1. [cert-manager](https://github.com/cert-manager/cert-manager): [v1.8.0](https://github.com/cert-manager/cert-manager/releases/tag/v1.8.0)
 
 ## Getting Started
