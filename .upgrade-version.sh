@@ -7,7 +7,6 @@ PASSWORD_GO_TYPE_FILE=api/v1alpha1/password_types.go
 PASSWORD_WEBHOOK_FILE=api/v1alpha1/password_webhook.go
 SAMPLE_YAML_FILE=config/samples/secret_v1alpha1_password.yaml
 CERT_MANAGER_VERSION=v1.8.0
-export KUSTOMIZE_VERSION=v4.5.5
 
 pre-commit
 get_latest_release() {
@@ -140,7 +139,7 @@ gsed -i "/PasswordSpec defines/ r tmpfile" $PASSWORD_GO_TYPE_FILE
 rm tmpfile
 
 ## fmt
-KUSTOMIZE_VERSION=4.5.5 make install
+make install
 # Check if Foo field is removed in CRD
 test "$(kubectl get crd passwords.secret.example.com -o jsonpath='{.spec.versions[].schema.openAPIV3Schema.properties.spec}' | jq '.properties == null')" = "true"
 
