@@ -32,7 +32,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
 	secretv1alpha1 "example.com/password-operator/api/v1alpha1"
-	"example.com/password-operator/controllers"
+	"example.com/password-operator/internal/controller"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -89,7 +89,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	if err = (&controllers.PasswordReconciler{
+	if err = (&controller.PasswordReconciler{
 		Client: mgr.GetClient(),
 		Scheme: mgr.GetScheme(),
 	}).SetupWithManager(mgr); err != nil {

@@ -2,12 +2,12 @@
 
 set -eux
 
-PASSWORD_CONTROLLER_GO_FILE=controllers/password_controller.go
+PASSWORD_CONTROLLER_GO_FILE=internal/controller/password_controller.go
 PASSWORD_GO_TYPE_FILE=api/v1alpha1/password_types.go
 PASSWORD_WEBHOOK_FILE=api/v1alpha1/password_webhook.go
 SAMPLE_YAML_FILE=config/samples/secret_v1alpha1_password.yaml
 CERT_MANAGER_VERSION=v1.8.0
-export KUSTOMIZE_VERSION=v4.5.5
+export CONTROLLER_TOOLS_VERSION=v0.12.0 # https://github.com/kubernetes-sigs/kubebuilder/issues/3316
 
 pre-commit
 get_latest_release() {
@@ -55,7 +55,8 @@ KEEP_FILES=(
     renovate.json
 )
 
-rm -rf api config controllers hack bin bundle
+sudo rm -rf bin
+rm -rf api config controllers hack bin bundle cmd internal
 for f in `ls` .dockerignore .gitignore; do
     if [[ ! " ${KEEP_FILES[*]} " =~ " ${f} " ]] && [ -f "$f" ]; then
         rm $f
@@ -100,6 +101,7 @@ git add .
 pre-commit run -a || true
 git commit -am "[kubebuilder] Init project"
 
+
 echo "======== INIT PROJECT COMPLETED ==========="
 
 # 2. [kubebuilder] Create API Password (Controller & Resource)
@@ -140,7 +142,7 @@ gsed -i "/PasswordSpec defines/ r tmpfile" $PASSWORD_GO_TYPE_FILE
 rm tmpfile
 
 ## fmt
-KUSTOMIZE_VERSION=4.5.5 make install
+make install
 # Check if Foo field is removed in CRD
 test "$(kubectl get crd passwords.secret.example.com -o jsonpath='{.spec.versions[].schema.openAPIV3Schema.properties.spec}' | jq '.properties == null')" = "true"
 
@@ -480,9 +482,9 @@ gsed -i '0,/apiVersion/s/apiVersion/#apiVersion/' config/default/webhookcainject
 
 gsed -i 's/#- ..\/webhook/- ..\/webhook/g' config/default/kustomization.yaml
 gsed -i 's/#- ..\/certmanager/- ..\/certmanager/g' config/default/kustomization.yaml
-gsed -i 's/#- manager_webhook_patch.yaml/- manager_webhook_patch.yaml/g' config/default/kustomization.yaml
-gsed -i 's/#- webhookcainjection_patch.yaml/- webhookcainjection_patch.yaml/g' config/default/kustomization.yaml
-gsed -i -e '/CERTIFICATE_NAMESPACE/,+25 s/#//' config/default/kustomization.yaml
+gsed -i 's/#- manager_webhook_patch.yaml/- manager_webhook_patch.yaml/g' config/default/kustomization.yaml # To enable webhook, uncomment all the sections with [WEBHOOK] prefix
+gsed -i 's/#- webhookcainjection_patch.yaml/- webhookcainjection_patch.yaml/g' config/default/kustomization.yaml  # To enable cert-manager uncomment all sections with 'CERTMANAGER' prefix.
+gsed -i -e '/#replacements:/,+96 s/#//' config/default/kustomization.yaml # To enable cert-manager uncomment all sections with 'CERTMANAGER' prefix.
 gsed -i 's/#- patches/- patches/g' config/crd/kustomization.yaml
 
 make install
@@ -499,9 +501,6 @@ while [ "$(kubectl get po -n cert-manager -o 'jsonpath={.items[*].status.contain
 done
 echo "cert-manager is ready"
 
-if [ -f bin/kustomize ]; then
-	rm bin/kustomize
-fi
 IMG=password-operator:webhook
 make docker-build IMG=$IMG
 kind load docker-image $IMG
