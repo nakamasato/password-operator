@@ -102,9 +102,6 @@ pre-commit run -a || true
 git commit -am "[kubebuilder] Init project"
 
 
-make kustomize
-kustomize version
-
 echo "======== INIT PROJECT COMPLETED ==========="
 
 # 2. [kubebuilder] Create API Password (Controller & Resource)
@@ -506,7 +503,7 @@ echo "cert-manager is ready"
 
 make kustomize # To ensure kustomize is installed
 # To ensure Certificate and Secret exist before starting operator, deploy Namespace and Certificate first.
-kustomize build config/default | yq '. | select(.kind == "Certificate" or .kind == "Namespace")' | kubectl apply -f -
+bin/kustomize build config/default | yq '. | select(.kind == "Certificate" or .kind == "Namespace")' | kubectl apply -f -
 IMG=password-operator:webhook
 make docker-build IMG=$IMG
 kind load docker-image $IMG
