@@ -485,6 +485,7 @@ gsed -i 's/#- ..\/certmanager/- ..\/certmanager/g' config/default/kustomization.
 gsed -i 's/#- manager_webhook_patch.yaml/- manager_webhook_patch.yaml/g' config/default/kustomization.yaml # To enable webhook, uncomment all the sections with [WEBHOOK] prefix
 gsed -i 's/#- webhookcainjection_patch.yaml/- webhookcainjection_patch.yaml/g' config/default/kustomization.yaml  # To enable cert-manager uncomment all sections with 'CERTMANAGER' prefix.
 gsed -i -e '/#replacements:/,+96 s/#//' config/default/kustomization.yaml # To enable cert-manager uncomment all sections with 'CERTMANAGER' prefix.
+gsed -i 's/patches:/patchesStrategicMerge:/g' config/crd/kustomization.yaml
 gsed -i 's/#- patches/- patches/g' config/crd/kustomization.yaml
 
 make install
