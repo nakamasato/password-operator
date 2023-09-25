@@ -22,6 +22,7 @@ import (
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
+	"sigs.k8s.io/controller-runtime/pkg/webhook/admission"
 )
 
 // log is for logging in this package.
@@ -41,25 +42,27 @@ func (r *Password) SetupWebhookWithManager(mgr ctrl.Manager) error {
 var _ webhook.Validator = &Password{}
 
 // ValidateCreate implements webhook.Validator so a webhook will be registered for the type
-func (r *Password) ValidateCreate() error {
+func (r *Password) ValidateCreate() (admission.Warnings, error) {
 	passwordlog.Info("validate create", "name", r.Name)
 
-	return r.validatePassword()
+	// TODO(user): fill in your validation logic upon object creation.
+	return nil, nil
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
-func (r *Password) ValidateUpdate(old runtime.Object) error {
+func (r *Password) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	passwordlog.Info("validate update", "name", r.Name)
 
-	return r.validatePassword()
+	// TODO(user): fill in your validation logic upon object update.
+	return nil, nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *Password) ValidateDelete() error {
+func (r *Password) ValidateDelete() (admission.Warnings, error) {
 	passwordlog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
-	return nil
+	return nil, nil
 }
 
 var ErrSumOfDigitAndSymbolMustBeLessThanLength = errors.New("Number of digits and symbols must be less than total length")
