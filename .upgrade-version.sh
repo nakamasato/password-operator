@@ -7,7 +7,6 @@ PASSWORD_GO_TYPE_FILE=api/v1alpha1/password_types.go
 PASSWORD_WEBHOOK_FILE=api/v1alpha1/password_webhook.go
 SAMPLE_YAML_FILE=config/samples/secret_v1alpha1_password.yaml
 CERT_MANAGER_VERSION=v1.8.0
-export CONTROLLER_TOOLS_VERSION=v0.12.0 # https://github.com/kubernetes-sigs/kubebuilder/issues/3316
 
 pre-commit
 get_latest_release() {
@@ -485,7 +484,6 @@ gsed -i 's/#- ..\/certmanager/- ..\/certmanager/g' config/default/kustomization.
 gsed -i 's/#- manager_webhook_patch.yaml/- manager_webhook_patch.yaml/g' config/default/kustomization.yaml # To enable webhook, uncomment all the sections with [WEBHOOK] prefix
 gsed -i 's/#- webhookcainjection_patch.yaml/- webhookcainjection_patch.yaml/g' config/default/kustomization.yaml  # To enable cert-manager uncomment all sections with 'CERTMANAGER' prefix.
 gsed -i -e '/#replacements:/,+96 s/#//' config/default/kustomization.yaml # To enable cert-manager uncomment all sections with 'CERTMANAGER' prefix.
-# gsed -i 's/patches:/patchesStrategicMerge:/g' config/crd/kustomization.yaml
 gsed -i 's/#- patches/- path: patches/g' config/crd/kustomization.yaml
 
 make install
