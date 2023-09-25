@@ -484,7 +484,7 @@ gsed -i 's/#- ..\/certmanager/- ..\/certmanager/g' config/default/kustomization.
 gsed -i 's/#- manager_webhook_patch.yaml/- manager_webhook_patch.yaml/g' config/default/kustomization.yaml # To enable webhook, uncomment all the sections with [WEBHOOK] prefix
 gsed -i 's/#- webhookcainjection_patch.yaml/- webhookcainjection_patch.yaml/g' config/default/kustomization.yaml  # To enable cert-manager uncomment all sections with 'CERTMANAGER' prefix.
 gsed -i -e '/#replacements:/,+96 s/#//' config/default/kustomization.yaml # To enable cert-manager uncomment all sections with 'CERTMANAGER' prefix.
-gsed -i 's/#- patches/- path: patches/g' config/crd/kustomization.yaml
+gsed -i 's/#- path: patches/- path: patches/g' config/crd/kustomization.yaml
 
 make install
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/$CERT_MANAGER_VERSION/cert-manager.yaml
