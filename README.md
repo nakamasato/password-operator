@@ -82,6 +82,14 @@ make manifests
 
 More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)
 
+### Recreate with new kubebuilder version
+
+Example:
+
+```
+echo yes | SED=gsed ./.upgrade-version.sh v3.12.0
+```
+
 ## License
 
 Copyright 2022.
