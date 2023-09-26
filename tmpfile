@@ -1,7 +1,0 @@
-func (r *PasswordReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
-    logger := log.FromContext(ctx)
-
-    logger.Info("Reconcile is called.")
-
-    return ctrl.Result{}, nil
-}
