@@ -459,9 +459,9 @@ var ErrSumOfDigitAndSymbolMustBeLessThanLength = errors.New("Number of digits an
 
 func (r *Password) validatePassword() (admission.Warnings, error) {
 	if r.Spec.Digit+r.Spec.Symbol > r.Spec.Length {
-		return admission.Warnings{}, ErrSumOfDigitAndSymbolMustBeLessThanLength
+		return nil, ErrSumOfDigitAndSymbolMustBeLessThanLength
 	}
-	return admission.Warnings{}, nil
+	return nil, nil
 }
 EOF
 rm tmpfile
