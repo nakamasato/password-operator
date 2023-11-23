@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -63,4 +64,13 @@ func (r *Password) ValidateDelete() (admission.Warnings, error) {
 
 	// TODO(user): fill in your validation logic upon object deletion.
 	return nil, nil
+}
+
+var ErrSumOfDigitAndSymbolMustBeLessThanLength = errors.New("Number of digits and symbols must be less than total length")
+
+func (r *Password) validatePassword() error {
+	if r.Spec.Digit+r.Spec.Symbol > r.Spec.Length {
+		return ErrSumOfDigitAndSymbolMustBeLessThanLength
+	}
+	return nil
 }
