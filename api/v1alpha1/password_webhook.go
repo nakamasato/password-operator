@@ -18,6 +18,7 @@ package v1alpha1
 
 import (
 	"errors"
+
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -28,6 +29,7 @@ import (
 // log is for logging in this package.
 var passwordlog = logf.Log.WithName("password-resource")
 
+// SetupWebhookWithManager will setup the manager to manage the webhooks
 func (r *Password) SetupWebhookWithManager(mgr ctrl.Manager) error {
 	return ctrl.NewWebhookManagedBy(mgr).
 		For(r).

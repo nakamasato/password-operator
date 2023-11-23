@@ -4,7 +4,7 @@ Example Kubernetes Operator project created with kubebuilder, which manages a CR
 ## Versions
 1. Docker Engine: 24.0.2
 1. [go](https://github.com/golang/go): [go1.20](https://github.com/golang/go/releases/go1.20)
-1. [kubebuilder](https://github.com/kubernetes-sigs/kubebuilder): [v3.12.0](https://github.com/kubernetes-sigs/kubebuilder/releases/v3.12.0)
+1. [kubebuilder](https://github.com/kubernetes-sigs/kubebuilder): [v3.13.0](https://github.com/kubernetes-sigs/kubebuilder/releases/v3.13.0)
 1. [Kubernetes](https://github.com/kubernetes/kubernetes): [v1.27.3](https://github.com/kubernetes/kubernetes/releases/tag/v1.27.3)
 1. [kind](https://github.com/kubernetes-sigs/kind): [v0.20.0](https://github.com/kubernetes-sigs/kind/releases/tag/v0.20.0)
 1. [kustomize](https://github.com/kubernetes-sigs/kustomize): [(devel)](https://github.com/kubernetes-sigs/kustomize/releases/tag/kustomize%2F(devel))
@@ -57,19 +57,72 @@ It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controlle
 which provides a reconcile function responsible for synchronizing resources untile the desired state is reached on the cluster
 
 ### Test It Out
+
+1. Start kind cluster
+
+    ```sh
+    kind create cluster
+    ```
+
 1. Install the CRDs into the cluster:
 
-```sh
-make install
-```
+    ```sh
+    make install
+    ```
 
-2. Run your controller (this will run in the foreground, so switch to a new terminal if you want to leave it running):
+1. Run cert manager
 
-```sh
-make run
-```
+    ```
+    CERT_MANAGER_VERSION=v1.8.0
+    kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/$CERT_MANAGER_VERSION/cert-manager.yaml
+    ```
 
-**NOTE:** You can also run this in one step by running: `make install run`
+1. Run your controller (this will run in the foreground, so switch to a new terminal if you want to leave it running):
+
+    ```sh
+    IMG=password-operator:webhook
+    make docker-build IMG=$IMG
+    kind load docker-image $IMG
+    make deploy IMG=$IMG
+    ```
+
+1. Create `Password` CR
+
+    ```sh
+    kubectl apply -f config/samples/secret_v1alpha1_password.yaml
+    ```
+
+1. Check Secret
+
+    ```sh
+    kubectl get secret
+    NAME              TYPE     DATA   AGE
+    password-sample   Opaque   1      5s
+    ```
+
+1. Check invalid CR (denied by admission webhook)
+
+    ```yaml
+    apiVersion: secret.example.com/v1alpha1
+    kind: Password
+    metadata:
+      labels:
+        app.kubernetes.io/name: password
+        app.kubernetes.io/instance: password-sample
+        app.kubernetes.io/part-of: password-operator
+        app.kubernetes.io/managed-by: kustomize
+        app.kubernetes.io/created-by: password-operator
+      name: password-sample
+    spec:
+      length: 20
+      digit: 10
+      symbol: 15
+    ```
+
+    ```sh
+    kubectl apply -f config/samples/secret_v1alpha1_password.yaml
+    Error from server (Forbidden): error when creating "config/samples/secret_v1alpha1_password.yaml": admission webhook "vpassword.kb.io" denied the request: Number of digits and symbols must be less than total length
+    ```
 
 ### Modifying the API definitions
 If you are editing the API definitions, generate the manifests such as CRs or CRDs using:

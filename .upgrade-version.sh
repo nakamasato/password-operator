@@ -524,6 +524,7 @@ make undeploy
 kubectl delete -f https://github.com/cert-manager/cert-manager/releases/download/$CERT_MANAGER_VERSION/cert-manager.yaml
 
 git add .
+make lint-fix
 pre-commit run -a || true
 git add . && git commit -am "[API] Implement validating admission webhook"
 
