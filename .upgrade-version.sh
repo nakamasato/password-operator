@@ -434,34 +434,34 @@ git add . && git commit -am "[kubebuilder] Create validating admission webhook"
 
 # Replace ValidateCreate
 cat << EOF > tmpfile
-func (r *Password) ValidateCreate() error {
+func (r *Password) ValidateCreate() (admission.Warnings, error) {
 	passwordlog.Info("validate create", "name", r.Name)
 
 	return r.validatePassword()
 }
 EOF
-$SED -i "/func (r \*Password) ValidateCreate() error {/,/^}/c $(sed 's/$/\\n/' tmpfile | tr -d '\n' | sed 's/.\{2\}$//')" $PASSWORD_WEBHOOK_FILE
+$SED -i "/func (r \*Password) ValidateCreate() (admission.Warnings, error) {/,/^}/c $(sed 's/$/\\n/' tmpfile | tr -d '\n' | sed 's/.\{2\}$//')" $PASSWORD_WEBHOOK_FILE
 
 # Replace ValidateUpdate
 cat << EOF > tmpfile
-func (r *Password) ValidateUpdate(old runtime.Object) error {
+func (r *Password) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	passwordlog.Info("validate update", "name", r.Name)
 
 	return r.validatePassword()
 }
 EOF
-$SED -i "/func (r \*Password) ValidateUpdate(old runtime.Object) error {/,/^}/c $(sed 's/$/\\n/' tmpfile | tr -d '\n' | sed 's/.\{2\}$//')" $PASSWORD_WEBHOOK_FILE
+$SED -i "/func (r \*Password) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {/,/^}/c $(sed 's/$/\\n/' tmpfile | tr -d '\n' | sed 's/.\{2\}$//')" $PASSWORD_WEBHOOK_FILE
 
 # add validatePassword at the bottom
 cat << EOF >> $PASSWORD_WEBHOOK_FILE
 
 var ErrSumOfDigitAndSymbolMustBeLessThanLength = errors.New("Number of digits and symbols must be less than total length")
 
-func (r *Password) validatePassword() error {
+func (r *Password) validatePassword() (admission.Warnings, error) {
 	if r.Spec.Digit+r.Spec.Symbol > r.Spec.Length {
-		return ErrSumOfDigitAndSymbolMustBeLessThanLength
+		return nil, ErrSumOfDigitAndSymbolMustBeLessThanLength
 	}
-	return nil
+	return nil, nil
 }
 EOF
 rm tmpfile
@@ -484,7 +484,7 @@ $SED -i 's/#- ..\/certmanager/- ..\/certmanager/g' config/default/kustomization.
 $SED -i 's/#- manager_webhook_patch.yaml/- manager_webhook_patch.yaml/g' config/default/kustomization.yaml # To enable webhook, uncomment all the sections with [WEBHOOK] prefix
 $SED -i 's/#- webhookcainjection_patch.yaml/- webhookcainjection_patch.yaml/g' config/default/kustomization.yaml  # To enable cert-manager uncomment all sections with 'CERTMANAGER' prefix.
 $SED -i -e '/#replacements:/,+96 s/#//' config/default/kustomization.yaml # To enable cert-manager uncomment all sections with 'CERTMANAGER' prefix.
-$SED -i 's/#- path: patches/- path: patches/g' config/crd/kustomization.yaml
+$SED -i 's/#- patches/- path: patches/g' config/crd/kustomization.yaml
 
 make install
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/$CERT_MANAGER_VERSION/cert-manager.yaml
