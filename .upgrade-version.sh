@@ -434,23 +434,23 @@ git add . && git commit -am "[kubebuilder] Create validating admission webhook"
 
 # Replace ValidateCreate
 cat << EOF > tmpfile
-func (r *Password) ValidateCreate() error {
+func (r *Password) ValidateCreate() (admission.Warnings, error) {
 	passwordlog.Info("validate create", "name", r.Name)
 
 	return r.validatePassword()
 }
 EOF
-$SED -i "/func (r \*Password) ValidateCreate() error {/,/^}/c $(sed 's/$/\\n/' tmpfile | tr -d '\n' | sed 's/.\{2\}$//')" $PASSWORD_WEBHOOK_FILE
+$SED -i "/func (r \*Password) ValidateCreate() (admission.Warnings, error) {/,/^}/c $(sed 's/$/\\n/' tmpfile | tr -d '\n' | sed 's/.\{2\}$//')" $PASSWORD_WEBHOOK_FILE
 
 # Replace ValidateUpdate
 cat << EOF > tmpfile
-func (r *Password) ValidateUpdate(old runtime.Object) error {
+func (r *Password) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	passwordlog.Info("validate update", "name", r.Name)
 
 	return r.validatePassword()
 }
 EOF
-$SED -i "/func (r \*Password) ValidateUpdate(old runtime.Object) error {/,/^}/c $(sed 's/$/\\n/' tmpfile | tr -d '\n' | sed 's/.\{2\}$//')" $PASSWORD_WEBHOOK_FILE
+$SED -i "/func (r \*Password) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {/,/^}/c $(sed 's/$/\\n/' tmpfile | tr -d '\n' | sed 's/.\{2\}$//')" $PASSWORD_WEBHOOK_FILE
 
 # add validatePassword at the bottom
 cat << EOF >> $PASSWORD_WEBHOOK_FILE
