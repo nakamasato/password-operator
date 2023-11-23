@@ -457,11 +457,11 @@ cat << EOF >> $PASSWORD_WEBHOOK_FILE
 
 var ErrSumOfDigitAndSymbolMustBeLessThanLength = errors.New("Number of digits and symbols must be less than total length")
 
-func (r *Password) validatePassword() error {
+func (r *Password) validatePassword() (admission.Warnings, error) {
 	if r.Spec.Digit+r.Spec.Symbol > r.Spec.Length {
-		return ErrSumOfDigitAndSymbolMustBeLessThanLength
+		return admission.Warnings{}, ErrSumOfDigitAndSymbolMustBeLessThanLength
 	}
-	return nil
+	return admission.Warnings{}, nil
 }
 EOF
 rm tmpfile
