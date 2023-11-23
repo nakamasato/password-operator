@@ -17,6 +17,7 @@ limitations under the License.
 package v1alpha1
 
 import (
+	"errors"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -44,16 +45,14 @@ var _ webhook.Validator = &Password{}
 func (r *Password) ValidateCreate() (admission.Warnings, error) {
 	passwordlog.Info("validate create", "name", r.Name)
 
-	// TODO(user): fill in your validation logic upon object creation.
-	return nil, nil
+	return r.validatePassword()
 }
 
 // ValidateUpdate implements webhook.Validator so a webhook will be registered for the type
 func (r *Password) ValidateUpdate(old runtime.Object) (admission.Warnings, error) {
 	passwordlog.Info("validate update", "name", r.Name)
 
-	// TODO(user): fill in your validation logic upon object update.
-	return nil, nil
+	return r.validatePassword()
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
@@ -61,5 +60,14 @@ func (r *Password) ValidateDelete() (admission.Warnings, error) {
 	passwordlog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
+	return nil, nil
+}
+
+var ErrSumOfDigitAndSymbolMustBeLessThanLength = errors.New("Number of digits and symbols must be less than total length")
+
+func (r *Password) validatePassword() (admission.Warnings, error) {
+	if r.Spec.Digit+r.Spec.Symbol > r.Spec.Length {
+		return nil, ErrSumOfDigitAndSymbolMustBeLessThanLength
+	}
 	return nil, nil
 }
