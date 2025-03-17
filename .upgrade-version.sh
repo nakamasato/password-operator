@@ -43,7 +43,9 @@ esac
 
 curl -sS -L -o kubebuilder https://github.com/kubernetes-sigs/kubebuilder/releases/download/${KUBEBUILDER_VERSION}/kubebuilder_$(go env GOOS)_$(go env GOARCH)
 chmod +x kubebuilder
-mv kubebuilder /usr/local/bin/
+mkdir -p bin
+mv kubebuilder bin/
+PATH=$PATH:$(pwd)/bin
 echo "install finished"
 
 # 0. Clean up
