@@ -64,6 +64,8 @@ type PasswordStatus struct {
 
 // +kubebuilder:object:root=true
 // +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
+// +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
 
 // Password is the Schema for the passwords API
 type Password struct {
