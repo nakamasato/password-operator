@@ -20,6 +20,13 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+type PasswordState string
+
+const (
+	PasswordInSync PasswordState = "InSync"
+	PasswordFailed PasswordState = "Failed"
+)
+
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 // NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
@@ -50,8 +57,9 @@ type PasswordSpec struct {
 
 // PasswordStatus defines the observed state of Password
 type PasswordStatus struct {
-	// INSERT ADDITIONAL STATUS FIELD - define observed state of cluster
-	// Important: Run "make" to regenerate code after modifying this file
+
+	// Information about if Password is in-sync.
+	State PasswordState `json:"state,omitempty"` // in-sync, failed
 }
 
 // +kubebuilder:object:root=true
