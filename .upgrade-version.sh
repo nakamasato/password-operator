@@ -411,10 +411,10 @@ git commit -am "[API&Controller] Add Password Status"
 
 # 11. [API] Add AdditionalPrinterColumns
 
-# //+kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
-# //+kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
-$SED -i '/\/\/+kubebuilder:subresource:status/a \/\/+kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`' $PASSWORD_GO_TYPE_FILE
-$SED -i '/\/\/+kubebuilder:subresource:status/a \/\/+kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`' $PASSWORD_GO_TYPE_FILE
+# // +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
+# // +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
+$SED -i '/\/\/ +kubebuilder:subresource:status/a \/\/ +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`' $PASSWORD_GO_TYPE_FILE
+$SED -i '/\/\/ +kubebuilder:subresource:status/a \/\/ +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`' $PASSWORD_GO_TYPE_FILE
 
 make manifests
 make install
