@@ -25,9 +25,9 @@ import (
 
 // PasswordSpec defines the desired state of Password
 type PasswordSpec struct {
-    // INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
-    // Important: Run "make" to regenerate code after modifying this file
-    // Foo is an example field of Password. Edit password_types.go to remove/update
+	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
+	// Important: Run "make" to regenerate code after modifying this file
+	// Foo is an example field of Password. Edit password_types.go to remove/update
 }
 
 // PasswordStatus defines the observed state of Password
