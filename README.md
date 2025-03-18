@@ -2,12 +2,12 @@
 Example Kubernetes Operator project created with kubebuilder, which manages a CRD `Password` and generates a configurable password.
 
 ## Versions
-1. Docker Engine: 24.0.2
-1. [go](https://github.com/golang/go): [go1.20](https://github.com/golang/go/releases/go1.20)
-1. [kubebuilder](https://github.com/kubernetes-sigs/kubebuilder): [v3.13.0](https://github.com/kubernetes-sigs/kubebuilder/releases/v3.13.0)
-1. [Kubernetes](https://github.com/kubernetes/kubernetes): [v1.27.3](https://github.com/kubernetes/kubernetes/releases/tag/v1.27.3)
-1. [kind](https://github.com/kubernetes-sigs/kind): [v0.20.0](https://github.com/kubernetes-sigs/kind/releases/tag/v0.20.0)
-1. [kustomize](https://github.com/kubernetes-sigs/kustomize): [(devel)](https://github.com/kubernetes-sigs/kustomize/releases/tag/kustomize%2F(devel))
+1. Docker Engine: 27.4.0
+1. [go](https://github.com/golang/go): [go1.23.2](https://github.com/golang/go/releases/go1.23.2)
+1. [kubebuilder](https://github.com/kubernetes-sigs/kubebuilder): [v4.0.0](https://github.com/kubernetes-sigs/kubebuilder/releases/v4.0.0)
+1. [Kubernetes](https://github.com/kubernetes/kubernetes): [v1.31.0](https://github.com/kubernetes/kubernetes/releases/tag/v1.31.0)
+1. [kind](https://github.com/kubernetes-sigs/kind): [v0.24.0](https://github.com/kubernetes-sigs/kind/releases/tag/v0.24.0)
+1. [kustomize](https://github.com/kubernetes-sigs/kustomize): [5.4.1](https://github.com/kubernetes-sigs/kustomize/releases/tag/kustomize%2F5.4.1)
 1. [cert-manager](https://github.com/cert-manager/cert-manager): [v1.8.0](https://github.com/cert-manager/cert-manager/releases/tag/v1.8.0)
 
 ## Getting Started

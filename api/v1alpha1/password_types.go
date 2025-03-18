@@ -1,5 +1,5 @@
 /*
-Copyright 2023.
+Copyright 2025.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -62,10 +62,10 @@ type PasswordStatus struct {
 	State PasswordState `json:"state,omitempty"` // in-sync, failed
 }
 
-//+kubebuilder:object:root=true
-//+kubebuilder:subresource:status
-//+kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
-//+kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
+// +kubebuilder:object:root=true
+// +kubebuilder:subresource:status
+// +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
+// +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
 
 // Password is the Schema for the passwords API
 type Password struct {
@@ -76,7 +76,7 @@ type Password struct {
 	Status PasswordStatus `json:"status,omitempty"`
 }
 
-//+kubebuilder:object:root=true
+// +kubebuilder:object:root=true
 
 // PasswordList contains a list of Password
 type PasswordList struct {

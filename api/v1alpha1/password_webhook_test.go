@@ -13,3 +13,27 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
+package v1alpha1
+
+import (
+	. "github.com/onsi/ginkgo/v2"
+)
+
+var _ = Describe("Password Webhook", func() {
+
+	Context("When creating Password under Validating Webhook", func() {
+		It("Should deny if a required field is empty", func() {
+
+			// TODO(user): Add your logic here
+
+		})
+
+		It("Should admit if all required fields are provided", func() {
+
+			// TODO(user): Add your logic here
+
+		})
+	})
+
+})

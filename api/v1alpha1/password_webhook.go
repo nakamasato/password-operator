@@ -1,5 +1,5 @@
 /*
-Copyright 2023.
+Copyright 2025.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -39,7 +39,9 @@ func (r *Password) SetupWebhookWithManager(mgr ctrl.Manager) error {
 // TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
-//+kubebuilder:webhook:path=/validate-secret-example-com-v1alpha1-password,mutating=false,failurePolicy=fail,sideEffects=None,groups=secret.example.com,resources=passwords,verbs=create;update,versions=v1alpha1,name=vpassword.kb.io,admissionReviewVersions=v1
+// NOTE: The 'path' attribute must follow a specific pattern and should not be modified directly here.
+// Modifying the path for an invalid path can cause API server errors; failing to locate the webhook.
+// +kubebuilder:webhook:path=/validate-secret-example-com-v1alpha1-password,mutating=false,failurePolicy=fail,sideEffects=None,groups=secret.example.com,resources=passwords,verbs=create;update,versions=v1alpha1,name=vpassword.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Validator = &Password{}
 

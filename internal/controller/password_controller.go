@@ -1,5 +1,5 @@
 /*
-Copyright 2023.
+Copyright 2025.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -38,9 +38,9 @@ type PasswordReconciler struct {
 	Scheme *runtime.Scheme
 }
 
-//+kubebuilder:rbac:groups=secret.example.com,resources=passwords,verbs=get;list;watch;create;update;patch;delete
-//+kubebuilder:rbac:groups=secret.example.com,resources=passwords/status,verbs=get;update;patch
-//+kubebuilder:rbac:groups=secret.example.com,resources=passwords/finalizers,verbs=update
+// +kubebuilder:rbac:groups=secret.example.com,resources=passwords,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=secret.example.com,resources=passwords/status,verbs=get;update;patch
+// +kubebuilder:rbac:groups=secret.example.com,resources=passwords/finalizers,verbs=update
 //+kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch;create;
 
 // Reconcile is part of the main kubernetes reconciliation loop which aims to
@@ -51,7 +51,7 @@ type PasswordReconciler struct {
 // the user.
 //
 // For more details, check Reconcile and its Result here:
-// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.16.3/pkg/reconcile
+// - https://pkg.go.dev/sigs.k8s.io/controller-runtime@v0.18.2/pkg/reconcile
 func (r *PasswordReconciler) Reconcile(ctx context.Context, req ctrl.Request) (ctrl.Result, error) {
 	logger := log.FromContext(ctx)
 

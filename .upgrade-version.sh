@@ -43,7 +43,9 @@ esac
 
 curl -sS -L -o kubebuilder https://github.com/kubernetes-sigs/kubebuilder/releases/download/${KUBEBUILDER_VERSION}/kubebuilder_$(go env GOOS)_$(go env GOARCH)
 chmod +x kubebuilder
-mv kubebuilder /usr/local/bin/
+mkdir -p bin
+mv kubebuilder bin/
+PATH=$PATH:$(pwd)/bin
 echo "install finished"
 
 # 0. Clean up
@@ -326,6 +328,8 @@ EOF
 # replace PasswordSpec with tmpfile
 $SED -i "/type PasswordSpec struct {/,/^}/c $(sed 's/$/\\n/' tmpfile | tr -d '\n' | sed 's/.\{2\}$//')" $PASSWORD_GO_TYPE_FILE
 
+# add Length to controller test
+$SED -i '/\/\/ TODO(user): Specify other spec details if needed./i\\tSpec: secretv1alpha1.PasswordSpec{Length: 20},' internal/controller/password_controller_test.go
 # check the length of the properties
 make install
 test "$(kubectl get crd passwords.secret.example.com -o jsonpath='{.spec.versions[].schema.openAPIV3Schema.properties.spec}' | jq '.properties | length')" = "5"
@@ -409,10 +413,10 @@ git commit -am "[API&Controller] Add Password Status"
 
 # 11. [API] Add AdditionalPrinterColumns
 
-# //+kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
-# //+kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
-$SED -i '/\/\/+kubebuilder:subresource:status/a \/\/+kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`' $PASSWORD_GO_TYPE_FILE
-$SED -i '/\/\/+kubebuilder:subresource:status/a \/\/+kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`' $PASSWORD_GO_TYPE_FILE
+# // +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`
+# // +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`
+$SED -i '/\/\/ +kubebuilder:subresource:status/a \/\/ +kubebuilder:printcolumn:name="State",type=string,JSONPath=`.status.state`' $PASSWORD_GO_TYPE_FILE
+$SED -i '/\/\/ +kubebuilder:subresource:status/a \/\/ +kubebuilder:printcolumn:name="Age",type=date,JSONPath=`.metadata.creationTimestamp`' $PASSWORD_GO_TYPE_FILE
 
 make manifests
 make install

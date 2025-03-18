@@ -25,7 +25,7 @@ KUBEBUILDER_VERSION=$1
 # get versions
 
 export $(grep CERT_MANAGER_VERSION= .upgrade-version.sh)
-KUSTOMIZE_VERSION=$(bin/kustomize version)
+KUSTOMIZE_VERSION=5.4.1
 GO_VERSION_CLI_RESULT=$(go version)
 GO_VERSION=$(echo ${GO_VERSION_CLI_RESULT} | sed 's/go version \(go[^\s]*\) [^\s]*/\1/')
 
