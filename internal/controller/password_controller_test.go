@@ -51,6 +51,7 @@ var _ = Describe("Password Controller", func() {
 						Name:      resourceName,
 						Namespace: "default",
 					},
+					Spec: secretv1alpha1.PasswordSpec{Length: 20},
 					// TODO(user): Specify other spec details if needed.
 				}
 				Expect(k8sClient.Create(ctx, resource)).To(Succeed())
