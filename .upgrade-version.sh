@@ -328,6 +328,8 @@ EOF
 # replace PasswordSpec with tmpfile
 $SED -i "/type PasswordSpec struct {/,/^}/c $(sed 's/$/\\n/' tmpfile | tr -d '\n' | sed 's/.\{2\}$//')" $PASSWORD_GO_TYPE_FILE
 
+# add Length to controller test
+$SED -i '/\/\/ TODO(user): Specify other spec details if needed./i\\tSpec: secretv1alpha1.PasswordSpec{Length: 20},' internal/controller/password_controller_test.go
 # check the length of the properties
 make install
 test "$(kubectl get crd passwords.secret.example.com -o jsonpath='{.spec.versions[].schema.openAPIV3Schema.properties.spec}' | jq '.properties | length')" = "5"
